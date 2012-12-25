@@ -30,6 +30,10 @@ var debug = function jspinyin_debug(str) {
   }
 };
 
+if (typeof LAYOUT_PAGE_DEFAULT === 'undefined') {
+  var LAYOUT_PAGE_DEFAULT = 'Default';
+} 
+
 var assert = function jspinyin_assert(condition, msg) {
   if (!debugging)
     return;
