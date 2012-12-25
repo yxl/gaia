@@ -4477,8 +4477,10 @@ MatrixSearch.prototype = {
    */
   extend_mtrx_nd: function matrixSearch_extend_mtrx_nd(mtrx_nd, lpi_items,
       start, lpi_num, dmi_fr, res_row) {
-    assert(null != mtrx_nd,
+    if (debugging) {
+      assert(null != mtrx_nd,
            'extend_mtrx_nd assertion error. Invalid parameter.');
+    }
     this.matrix_[res_row].mtrx_nd_fixed = null;
 
     if (this.mtrx_nd_pool_used_ >= MatrixSearch.kMtrxNdPoolSize -
@@ -4716,7 +4718,9 @@ MatrixSearch.prototype = {
             }
             d = this.dmi_pool_[d.dmi_fr];
           }
-          assert(0 == prev_ids_num, '0 != prev_ids_num');
+          if (debugging) {
+            assert(0 == prev_ids_num, '0 != prev_ids_num');
+          }
           this.dep_.splids_extended = dmi.dict_level;
         }
         this.dep_.splids[this.dep_.splids_extended] = spl_idx;
@@ -4730,7 +4734,9 @@ MatrixSearch.prototype = {
           var h2f_ret = this.spl_trie_.half_to_full(spl_idx);
           this.dep_.id_num = h2f_ret.num;
           this.dep_.id_start = h2f_ret.spl_id_start;
-          assert(this.dep_.id_num > 0, 'this.dep_.id_num <= 0');
+          if (debugging) {
+            assert(this.dep_.id_num > 0, 'this.dep_.id_num <= 0');
+          }
         }
 
         var new_dmi_num;
@@ -4755,8 +4761,10 @@ MatrixSearch.prototype = {
           if (null == dmi) {
             fr_row = oldrow;
           } else {
-            assert(oldrow >= dmi.splstr_len, StringUtils.format(
+            if (debugging) {
+              assert(oldrow >= dmi.splstr_len, StringUtils.format(
                 'oldrow({0}) < dmi.splstr_len({1})', oldrow, dmi.splstr_len));
+            }
             fr_row = oldrow - dmi.splstr_len;
           }
           var end_pos = this.matrix_[fr_row].mtrx_nd_pos +
@@ -5086,7 +5094,9 @@ MatrixSearch.prototype = {
       var strs = this.get_lemma_str(lma_id);
       word_str += strs[0];
       word_str_tr += strs[1];
-      assert(strs[0].length == lma_len);
+      if (debugging) {
+        assert(strs[0].length == lma_len);
+      }
 
       var tmp = this.get_lemma_splids(lma_id, spl_ids, spl_id_fr, lma_len);
       if (tmp != lma_len) {
@@ -5096,7 +5106,9 @@ MatrixSearch.prototype = {
       spl_id_fr += lma_len;
     }
 
-    assert(spl_id_fr <= DictDef.kMaxLemmaSize);
+    if (debugging) {
+      assert(spl_id_fr <= DictDef.kMaxLemmaSize);
+    }
 
     return this.user_dict_.put_lemma(word_str, word_str_tr, spl_ids,
         spl_id_fr, 1);
@@ -5705,7 +5717,9 @@ DictTrie.prototype = {
 
     // from DictDef.LmaNodeLE0 (root) to DictDef.LmaNodeLE0
     if (0 == from_handle) {
-      assert(0 == dep.splids_extended, 'extend_dict assertion error.');
+      if (debugging) {
+        assert(0 == dep.splids_extended, 'extend_dict assertion error.');
+      }
       return this.extend_dict0(from_handle, dep, lpi_items, start, lpi_max);
     }
 
@@ -5750,23 +5764,31 @@ DictTrie.prototype = {
         var ret = this.spl_trie_.half_to_full(splid_str[spl_pos]);
         id_num = ret.num;
         id_start = ret.spl_id_start;
-        assert(id_num > 0);
+        if (debugging) {
+          assert(id_num > 0);
+        }
       }
 
       // Extend the nodes
       if (0 == spl_pos) {  // From LmaNodeLE0 (root) to LmaNodeLE0 nodes
         for (var node_fr_pos = 0; node_fr_pos < node_fr_num; node_fr_pos++) {
           var node = node_fr_le0[node_fr_pos];
-          assert(node == this.root_[0] && 1 == node_fr_num);
+          if (debugging) {
+            assert(node == this.root_[0] && 1 == node_fr_num);
+          }
           var son_start =
             this.splid_le0_index_[id_start - SpellingTrie.kFullSplIdStart];
           var son_end = this.splid_le0_index_[id_start + id_num -
                                               SpellingTrie.kFullSplIdStart];
           for (var son_pos = son_start; son_pos < son_end; son_pos++) {
-            assert(1 == node.son_1st_off);
+            if (debugging) {
+              assert(1 == node.son_1st_off);
+            }
             var node_son = this.root_[son_pos];
-            assert(node_son.spl_idx >= id_start &&
-                   node_son.spl_idx < id_start + id_num);
+            if (debugging) {
+              assert(node_son.spl_idx >= id_start &&
+                     node_son.spl_idx < id_start + id_num);
+            }
             if (node_to_num < MAX_EXTENDBUF_LEN) {
               node_to_le0[node_to_num] = node_son;
               node_to_num++;
@@ -5793,7 +5815,9 @@ DictTrie.prototype = {
           var node = node_fr_le0[node_fr_pos];
           for (var son_pos = 0; son_pos < node.num_of_son;
                son_pos++) {
-            assert(node.son_1st_off <= this.lma_node_num_ge1_);
+            if (debugging) {
+              assert(node.son_1st_off <= this.lma_node_num_ge1_);
+            }
             var node_son = this.nodes_ge1_[node.son_1st_off + son_pos];
             if (node_son.spl_idx >= id_start &&
                 node_son.spl_idx < id_start + id_num) {
@@ -5823,7 +5847,9 @@ DictTrie.prototype = {
           var node = node_fr_ge1[node_fr_pos];
           for (var son_pos = 0; son_pos < node.num_of_son;
                son_pos++) {
-            assert(node.son_1st_off_l > 0 || node.son_1st_off_h > 0);
+            if (debugging) {
+              assert(node.son_1st_off_l > 0 || node.son_1st_off_h > 0);
+            }
             var node_son = this.nodes_ge1_[this.get_son_offset(node) + son_pos];
             if (node_son.spl_idx >= id_start &&
                 node_son.spl_idx < id_start + id_num) {
@@ -5925,8 +5951,11 @@ DictTrie.prototype = {
                                                        splids_max) {
     var lma_str = this.get_lemma_str(id_lemma)[0];
     var lma_len = lma_str.length;
-    assert(lma_len == splids_max, 'get_lemma_splids assertion error.' +
-      StringUtils.format('lma_len({0}) != splids_max{1}', lma_len, splids_max));
+    if (debugging) {
+      assert(lma_len == splids_max, 'get_lemma_splids assertion error.' +
+        StringUtils.format('lma_len({0}) != splids_max{1}', lma_len,
+                           splids_max));
+    }
 
     var spl_mtrx = [];//[kMaxLemmaSize * 5];
     var spl_start = [];//[kMaxLemmaSize + 1];
@@ -5943,9 +5972,11 @@ DictTrie.prototype = {
             splids[pos]);
         cand_splids_this = splids_this.length;
         spl_mtrx = spl_mtrx.concat(splids_this);
-        assert(cand_splids_this > 0,
-            StringUtils.format('cand_splids_this({0}) <= 0',
-                               cand_splids_this));
+        if (debugging) {
+          assert(cand_splids_this > 0,
+             StringUtils.format('cand_splids_this({0}) <= 0',
+                                cand_splids_this));
+        }
       }
       spl_start[pos + 1] = spl_start[pos] + cand_splids_this;
       try_num *= cand_splids_this;
@@ -6272,8 +6303,10 @@ DictTrie.prototype = {
    */
   extend_dict0: function dictTrie_extend_dict0(from_handle, dep, lpi_items,
                                                start, lpi_max) {
-    assert(null !== dep && 0 == from_handle, 'extend_dict0 assertion error.' +
-           'Invalid arguments.');
+    if (debugging) {
+      assert(null !== dep && 0 == from_handle, 'extend_dict0 assertion error.' +
+             'Invalid arguments.');
+    }
     var ret = {handle: 0, lpi_num: 0};
     var lpi_num = 0;
     var ret_handle = 0;
@@ -6293,11 +6326,15 @@ DictTrie.prototype = {
     var son_end =
       this.splid_le0_index_[id_start + id_num - SpellingTrie.kFullSplIdStart];
     for (var son_pos = son_start; son_pos < son_end; son_pos++) {
-      assert(1 == node.son_1st_off,
-             'extend_dict0 assertion error. Invalid tree node.');
+      if (debugging) {
+        assert(1 == node.son_1st_off,
+               'extend_dict0 assertion error. Invalid tree node.');
+      }
       var son = this.root_[son_pos];
-      assert(son.spl_idx >= id_start && son.spl_idx < id_start + id_num,
-             'extend_dict0 assertion error. Invalid spl_idx: ' + son.spl_idx);
+      if (debugging) {
+        assert(son.spl_idx >= id_start && son.spl_idx < id_start + id_num,
+               'extend_dict0 assertion error. Invalid spl_idx: ' + son.spl_idx);
+      }
       if (!cached && lpi_num < lpi_max) {
         var need_lpi = true;
         if (this.spl_trie_.is_half_id_yunmu(splid) && son_pos != son_start) {
@@ -6351,9 +6388,11 @@ DictTrie.prototype = {
    */
   extend_dict1: function dictTrie_extend_dict1(from_handle, dep, lpi_items,
                                                start, lpi_max) {
-    assert(null !== dep && from_handle > 0 &&
-           from_handle < this.mile_stones_pos_,
-           'extend_dict1 assertion error. Invalid arguments.');
+    if (debugging) {
+      assert(null !== dep && from_handle > 0 &&
+             from_handle < this.mile_stones_pos_,
+             'extend_dict1 assertion error. Invalid arguments.');
+    }
 
     var ret = {handle: 0, lpi_num: 0};
     var ret_handle = 0;
@@ -6377,7 +6416,9 @@ DictTrie.prototype = {
         var found_start = 0;
         var found_num = 0;
         for (var son_pos = 0; son_pos < node.num_of_son; son_pos++) {
-          assert(node.son_1st_off <= this.lma_node_num_ge1_);
+          if (debugging) {
+            assert(node.son_1st_off <= this.lma_node_num_ge1_);
+          }
           var son = this.nodes_ge1_[node.son_1st_off + son_pos];
           if (son.spl_idx >= id_start &&
               son.spl_idx < id_start + id_num) {
@@ -6446,9 +6487,11 @@ DictTrie.prototype = {
    */
   extend_dict2: function dictTrie_extend_dict2(from_handle, dep, lpi_items,
                                                start, lpi_max) {
-    assert(null !== dep && from_handle > 0 &&
-           from_handle < this.mile_stones_pos_,
-           'extend_dict1 assertion error. Invalid arguments.');
+    if (debugging) {
+      assert(null !== dep && from_handle > 0 &&
+            from_handle < this.mile_stones_pos_,
+            'extend_dict1 assertion error. Invalid arguments.');
+    }
 
     var ret = {handle: 0, lpi_num: 0};
     var ret_handle = 0;
@@ -6473,7 +6516,9 @@ DictTrie.prototype = {
         var found_num = 0;
 
         for (var son_pos = 0; son_pos < node.num_of_son; son_pos++) {
-          assert(node.son_1st_off_l > 0 || node.son_1st_off_h > 0);
+          if (debugging) {
+            assert(node.son_1st_off_l > 0 || node.son_1st_off_h > 0);
+          }
           var son = this.nodes_ge1_[this.get_son_offset(node) + son_pos];
           if (son.spl_idx >= id_start &&
               son.spl_idx < id_start + id_num) {
@@ -6553,7 +6598,9 @@ DictTrie.prototype = {
         var node_son;
         var son_pos;
         for (son_pos = 0; son_pos < node_le0.num_of_son; son_pos++) {
-          assert(node_le0.son_1st_off <= this.lma_node_num_ge1_);
+          if (debugging) {
+            assert(node_le0.son_1st_off <= this.lma_node_num_ge1_);
+          }
           node_son = this.nodes_ge1_[node_le0.son_1st_off] + son_pos;
           if (node_son.spl_idx == splids[pos]) {
             break;
@@ -6569,7 +6616,9 @@ DictTrie.prototype = {
         var node_son;
         var son_pos;
         for (son_pos = 0; son_pos < node_ge1.num_of_son; son_pos++) {
-          assert(node_ge1.son_1st_off_l > 0 || node_ge1.son_1st_off_h > 0);
+          if (debugging) {
+            assert(node_ge1.son_1st_off_l > 0 || node_ge1.son_1st_off_h > 0);
+          }
           node_son = this.nodes_ge1_[this.get_son_offset(node_ge1) + son_pos];
           if (node_son.spl_idx == splids[pos]) {
             break;
@@ -6720,8 +6769,10 @@ DictTrie.prototype = {
       var buf_size = SpellingTrie.get_instance().get_spelling_num() + 1;
       for (var splid = last_splid + 1; splid < buf_size +
            SpellingTrie.kFullSplIdStart; splid++) {
-        assert(splid - SpellingTrie.kFullSplIdStart < buf_size,
-          'load_dict_from_string assertion error.');
+        if (debugging) {
+          assert(splid - SpellingTrie.kFullSplIdStart < buf_size,
+                 'load_dict_from_string assertion error.');
+        }
         this.splid_le0_index_[splid - SpellingTrie.kFullSplIdStart] = last_pos +
           1;
       }
@@ -10527,8 +10578,10 @@ DictList.prototype = {
     for (var i = 0; i < lemma_num; i++) {
       this.buf_ += lemma_arr[i].hanzi_str;
       this.buf_tr_ += lemma_arr[i].hanzi_str_tr;
-      assert(this.buf_.length == this.buf_tr_.length,
-             'fill_list assertion error');
+      if (debugging) {
+        assert(this.buf_.length == this.buf_tr_.length,
+               'fill_list assertion error');
+      }
     }
   },
 
@@ -10764,8 +10817,10 @@ NGram.prototype = {
       var found = true;
       while (found) {
         found = false;
-        assert(freq_pos < freqs.length, 'build_unigram assertion error.' +
-               'Not enough data to create code book.');
+        if (debugging) {
+          assert(freq_pos < freqs.length, 'build_unigram assertion error.' +
+                 'Not enough data to create code book.');
+        }
         var cand = freqs[freq_pos];
         for (var i = 0; i < code_pos; i++) {
           if (this.freq_codes_df_[i] == cand) {
@@ -11649,10 +11704,12 @@ SpellingTrie.prototype = {
 
     var spelling_last_start = this.spelling_buf_[item_start];
     var char_for_node = spelling_last_start.str[level];
-    assert(char_for_node >= 'A' && char_for_node <= 'Z' ||
-         'h' == char_for_node,
-         'construct_spellings_subset assertion error.' +
-         'Invalid char_for_node.');
+    if (debugging) {
+      assert(char_for_node >= 'A' && char_for_node <= 'Z' ||
+           'h' == char_for_node,
+           'construct_spellings_subset assertion error.' +
+           'Invalid char_for_node.');
+    }
 
     // Scan the array to find how many sons
     for (var i = item_start + 1; i < item_end; i++) {
@@ -11685,9 +11742,11 @@ SpellingTrie.prototype = {
     for (var i = item_start + 1; i < item_end; i++) {
       var spelling_current = this.spelling_buf_[i];
       var char_current = spelling_current.str[level];
-      assert(SpellingTrie.is_valid_spl_char(char_current),
-        'construct_spellings_subset assertion error. Invalid char_current: ' +
-        char_current);
+      if (debugging) {
+        assert(SpellingTrie.is_valid_spl_char(char_current),
+         'construct_spellings_subset assertion error. Invalid char_current: ' +
+         char_current);
+      }
 
       if (char_current != char_for_node) {
         // Construct a node
