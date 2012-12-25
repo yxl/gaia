@@ -2015,20 +2015,24 @@ var SearchUtility = {
    * @param {number | string | Array} a The first item to be compare.
    * @param {number | string | Array} b The second item to be compare.
    * @return {number} -1: a < b; 0: a = b; 1: a > b.
+   *
+   * The release version doesn't support comparing arrays.
    */
   compare: function searchUtility_compare(a, b) {
-    if (ArrayUtils.isArray(a) && ArrayUtils.isArray(b)) {
-      var n = Math.min(a.length, b.length);
-      var i = 0;
-      for (i = 0; i < n; i++) {
-        if (a[i] != b[i]) {
-          break;
+    if (debugging) {
+      if (ArrayUtils.isArray(a) && ArrayUtils.isArray(b)) {
+        var n = Math.min(a.length, b.length);
+        var i = 0;
+        for (i = 0; i < n; i++) {
+          if (a[i] != b[i]) {
+            break;
+          }
         }
+        if (i == n) {
+          return SearchUtility.compare(b.length, a.length);
+        }
+        return SearchUtility.compare(a[i], b[i]);
       }
-      if (i == n) {
-        return SearchUtility.compare(b.length, a.length);
-      }
-      return SearchUtility.compare(a[i], b[i]);
     }
     if (a > b) {
       return 1;
