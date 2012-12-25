@@ -32,7 +32,7 @@ var debug = function jspinyin_debug(str) {
 
 if (typeof LAYOUT_PAGE_DEFAULT === 'undefined') {
   var LAYOUT_PAGE_DEFAULT = 'Default';
-} 
+}
 
 var assert = function jspinyin_assert(condition, msg) {
   if (!debugging)
@@ -1515,8 +1515,10 @@ SpiderMonkeyFileSystemStorage.prototype = {
   },
 
   write: function spiderMonkeyFileSystemStorage_write(name, str, callback) {
-    debug(StringUtils.format('SpiderMonkeyFileSystemStorage writes file "{0}"',
-        name));
+    if (debugging) {
+      debug(StringUtils.format(
+        'SpiderMonkeyFileSystemStorage writes file "{0}"', name));
+    }
     print(str);
     if (callback) {
       callback(true);
@@ -1635,7 +1637,10 @@ XhrFileSystemStorage.prototype = {
    * @override
    */
   write: function xhrFileSystemStorage_write(name, str, callback) {
-    debug(StringUtils.format('XhrFileSystemStorage writes file: "{0}"', name));
+    if (debugging) {
+      debug(StringUtils.format('XhrFileSystemStorage writes file: "{0}"',
+                               name));
+    }
     var self = this;
     var isOk = false;
     var doCallback = function write_doCallback() {
@@ -1681,7 +1686,10 @@ XhrFileSystemStorage.prototype = {
    * @override
    */
   del: function xhrFileSystemStorage_del(name, callback) {
-    debug(StringUtils.format('XhrFileSystemStorage deletes file: "{0}"', name));
+    if (debugging) {
+      debug(StringUtils.format('XhrFileSystemStorage deletes file: "{0}"',
+                               name));
+    }
     var self = this;
     var isOk = false;
     var doCallback = function del_doCallback() {
@@ -3099,23 +3107,29 @@ MatrixSearch.prototype = {
     var mtrx_nd = this.mtrx_nd_pool_[this.matrix_[this.pys_decoded_len_].
         mtrx_nd_pos];
 
-    debug('--- sentence score: ' + mtrx_nd.score);
+    if (debugging) {
+      debug('--- sentence score: ' + mtrx_nd.score);
 
-    debug('==============Sentence DMI (reverse order) begin===========>>');
+      debug('==============Sentence DMI (reverse order) begin===========>>');
+    }
 
     while (mtrx_nd != null) {
       idxs[id_num] = mtrx_nd.id;
       id_num++;
 
-      debug(StringUtils.format(
-          '---MatrixNode [step: {0}, lma_idx: {1}, total score: {2}]',
-          mtrx_nd.step, mtrx_nd.id, mtrx_nd.score));
-      this.debug_print_dmi(mtrx_nd.dmi_fr, 1);
+      if (debugging) {
+        debug(StringUtils.format(
+            '---MatrixNode [step: {0}, lma_idx: {1}, total score: {2}]',
+            mtrx_nd.step, mtrx_nd.id, mtrx_nd.score));
+        this.debug_print_dmi(mtrx_nd.dmi_fr, 1);
+      }
 
       mtrx_nd = mtrx_nd.from;
     }
 
-    debug('<<==============Sentence DMI (reverse order) end=============');
+    if (debugging) {
+      debug('<<==============Sentence DMI (reverse order) end=============');
+    }
 
     do {
       id_num--;
@@ -4345,10 +4359,13 @@ MatrixSearch.prototype = {
       handles[1] = r.handle;
       lpi_num = r.lpi_num;
       if (handles[1] > 0) {
-        for (var t = 0; t < lpi_num; t++) {
-          debug(StringUtils.format('--Extend in user dict: uid:{0} uscore:{1}'),
-              this.lpi_items_[this.lpi_total_ + t].id,
-              this.lpi_items_[this.lpi_total_ + t].psb);
+        if (debugging) {
+          for (var t = 0; t < lpi_num; t++) {
+            debug(
+                StringUtils.format('--Extend in user dict: uid:{0} uscore:{1}'),
+                this.lpi_items_[this.lpi_total_ + t].id,
+                this.lpi_items_[this.lpi_total_ + t].psb);
+          }
         }
         this.lpi_total_ += lpi_num;
       }
@@ -4381,7 +4398,9 @@ MatrixSearch.prototype = {
         return ret_val;
       }
 
-      debug('--- lpi_total_ = ' + this.lpi_total_);
+      if (debugging) {
+        debug('--- lpi_total_ = ' + this.lpi_total_);
+      }
 
       ArrayUtils.sort(this.lpi_items_, 0, this.lpi_total_,
           SearchUtility.cmp_lpi_with_psb);
@@ -4818,17 +4837,20 @@ MatrixSearch.prototype = {
     // Sort those partially-matched items by their unified scores.
     ArrayUtils.sort(this.lpi_items_, lpi_num_full_match, this.lpi_total_ -
         lpi_num_full_match, SearchUtility.cmp_lpi_with_unified_psb);
-    debug('-----Prepare candidates, score:');
-    var line = '';
-    for (var a = 0; a < this.lpi_total_; a++) {
-      line += StringUtils.format('[{0}]{1}{2}    ', a,
-          this.get_lemma_str(this.lpi_items_[a].id), this.lpi_items_[a].psb);
-      if ((a + 1) % 6 == 0) {
-        debug(line);
-        line = '';
+
+    if (debugging) {
+      debug('-----Prepare candidates, score:');
+      var line = '';
+      for (var a = 0; a < this.lpi_total_; a++) {
+        line += StringUtils.format('[{0}]{1}{2}    ', a,
+            this.get_lemma_str(this.lpi_items_[a].id), this.lpi_items_[a].psb);
+        if ((a + 1) % 6 == 0) {
+          debug(line);
+          line = '';
+        }
       }
+      debug('--- lpi_total_ = ' + this.lpi_total_);
     }
-    debug('--- lpi_total_ = ' + this.lpi_total_);
   },
 
   /**
@@ -4959,12 +4981,14 @@ MatrixSearch.prototype = {
       res_total = buf_len;
     }
 
-    debug('/////////////////Predicted Items Begin////////////////////>>');
-    for (i = 0; i < res_total; i++) {
-      debug(this.npre_items_[i].pre_hzs + '(' +
-          this.npre_items_[i].pre_hzs_tr + ')');
+    if (debugging) {
+      debug('/////////////////Predicted Items Begin////////////////////>>');
+      for (i = 0; i < res_total; i++) {
+        debug(this.npre_items_[i].pre_hzs + '(' +
+            this.npre_items_[i].pre_hzs_tr + ')');
+      }
+      debug('<<///////////////Predicted Items End////////////////////////');
     }
-    debug('<<///////////////Predicted Items End////////////////////////');
 
     for (i = 0; i < res_total; i++) {
       predict_buf[i] = [this.npre_items_[i].pre_hzs,
@@ -5522,7 +5546,9 @@ DictTrie.prototype = {
    * @override
    */
   load_dict: function dictTrie_load(file_name, start_id, end_id, callback) {
-    debug('DictTrie#load_dict: ' + file_name);
+    if (debugging) {
+      debug('DictTrie#load_dict: ' + file_name);
+    }
     var self = this;
     var isOk = false;
     var doCallback = function load_doCallback() {
@@ -5544,7 +5570,9 @@ DictTrie.prototype = {
     var taskQueue = new TaskQueue(
         function load_taskQueueOnCompleteCallback(queueData) {
       if (self.top_lmas_num_ > end_id - start_id + 1) {
-        debug('DictTrie failed to load from file.');
+        if (debugging) {
+          debug('DictTrie failed to load from file.');
+        }
       } else {
         isOk = true;
       }
@@ -5571,7 +5599,9 @@ DictTrie.prototype = {
           str = str.replace(/\n/g, '');
           dictJson = JSON.parse(str);
         } catch (e) {
-          debug('Failed to open the system dictionary file.');
+          if (debugging) {
+            debug('Failed to open the system dictionary file.');
+          }
           doCallback();
           return;
         }
@@ -5582,7 +5612,9 @@ DictTrie.prototype = {
     // Load SpellingTrie.
     taskQueue.push(function loadSpellingTrie(taskQueue, taskData) {
       if (!spl_trie.load_spl_trie(dictJson.spl_trie)) {
-        debug('Failed to load SpellingTrie.');
+        if (debugging) {
+          debug('Failed to load SpellingTrie.');
+        }
         doCallback();
         return;
       }
@@ -5592,7 +5624,9 @@ DictTrie.prototype = {
     // Load DictList.
     taskQueue.push(function loadDictList(taskQueue, taskData) {
       if (!self.dict_list_.load_list(dictJson.dict_list)) {
-        debug('Failed to load DictList.');
+        if (debugging) {
+          debug('Failed to load DictList.');
+        }
         doCallback();
         return;
       }
@@ -5602,7 +5636,9 @@ DictTrie.prototype = {
     // Load DictTrie.
     taskQueue.push(function loadDictTrie(taskQueue, taskData) {
       if (!self.load_dict_from_string(dictJson.dict_trie)) {
-        debug('Failed to load DictTrie.');
+        if (debugging) {
+          debug('Failed to load DictTrie.');
+        }
         doCallback();
         return;
       }
@@ -5612,7 +5648,9 @@ DictTrie.prototype = {
     // Load NGram.
     taskQueue.push(function loadNGram(taskQueue, taskData) {
       if (!ngram.load_ngram(dictJson.ngram)) {
-        debug('Failed to load NGram.');
+        if (debugging) {
+          debug('Failed to load NGram.');
+        }
         doCallback();
         return;
       }
@@ -5657,7 +5695,9 @@ DictTrie.prototype = {
    */
   extend_dict: function dictTrie_extend_dict(from_handle, dep, lpi_items, start,
                                              lpi_max) {
-    debug('DictTrie#extend_dict');
+    if (debugging) {
+      debug('DictTrie#extend_dict');
+    }
     var defaultValue = {handle: 0, lpi_num: 0};
     if (null === dep) {
       return defaultValue;
@@ -6290,8 +6330,10 @@ DictTrie.prototype = {
         break;
     }
 
-    debug(StringUtils.format('----- parsing marks: {0}, mile stone: {1}',
+    if (debugging) {
+      debug(StringUtils.format('----- parsing marks: {0}, mile stone: {1}',
                              this.parsing_marks_pos_, this.mile_stones_pos_));
+    }
     ret.handle = ret_handle;
     ret.lpi_num = lpi_num;
     return ret;
@@ -6383,8 +6425,10 @@ DictTrie.prototype = {
       ret_val = 1;
     }
 
-    debug(StringUtils.format('----- parsing marks: {0}, mile stone: {1}',
+    if (debugging) {
+      debug(StringUtils.format('----- parsing marks: {0}, mile stone: {1}',
                              this.parsing_marks_pos_, this.mile_stones_pos_));
+    }
     ret.handle = ret_handle;
     ret.lpi_num = lpi_num;
     return ret;
@@ -6476,8 +6520,11 @@ DictTrie.prototype = {
       this.mile_stones_pos_++;
     }
 
-    debug(StringUtils.format('----- parsing marks: {0}, mile stone: {1}',
+    if (debugging) {
+      debug(StringUtils.format('----- parsing marks: {0}, mile stone: {1}',
                              this.parsing_marks_pos_, this.mile_stones_pos_));
+    }
+
     ret.handle = ret_handle;
     ret.lpi_num = lpi_num;
     return ret;
@@ -6679,7 +6726,9 @@ DictTrie.prototype = {
           1;
       }
     } catch (ex) {
-      debug('load_dict_from_string: ' + ex);
+      if (debugging) {
+        debug('load_dict_from_string: ' + ex);
+      }
       return false;
     }
     return true;
@@ -8121,7 +8170,9 @@ UserDict.prototype = {
    * @override
    */
   load_dict: function userDict_load(file_name, start_id, end_id, callback) {
-    debug('UserDict#load_dict: ' + file_name);
+    if (debugging) {
+      debug('UserDict#load_dict: ' + file_name);
+    }
     var self = this;
     var isOk = false;
     var doCallback = function load_doCallback() {
@@ -8181,7 +8232,9 @@ UserDict.prototype = {
    * @override
    */
   close_dict: function userDict_close_dict(callback) {
-    debug('UserDict#close_dict');
+    if (debugging) {
+      debug('UserDict#close_dict');
+    }
     var self = this;
     var isOk = false;
     var doCallback = function close_doCallback() {
@@ -8414,7 +8467,9 @@ UserDict.prototype = {
         this.state_ = UserDict.UserDictState.USER_DICT_SCORE_DIRTY;
       }
 
-      debug('update_lemma');
+      if (debugging) {
+        debug('update_lemma');
+      }
       return this.ids_[off];
     }
     return 0;
@@ -8496,7 +8551,9 @@ UserDict.prototype = {
    * @override
    */
   flush_cache: function userDict_flush_cache(callback) {
-    debug('Flushing cache...');
+    if (debugging) {
+      debug('Flushing cache...');
+    }
     var self = this;
     var doCallback = function fush_cache_doCallback() {
       if (callback) {
@@ -8511,7 +8568,9 @@ UserDict.prototype = {
     }
     this.close_dict(function flush_cache_close_dict_callback(isOk) {
       if (isOk) {
-        debug('Succeeded in closing user dict.');
+        if (debugging) {
+          debug('Succeeded in closing user dict.');
+        }
         self.load_dict(file, start_id, DictDef.kUserDictIdEnd,
             function load_dict_callback(success) {
           if (success) {
@@ -8522,7 +8581,9 @@ UserDict.prototype = {
           doCallback();
         });
       } else {
-        debug('Failed to close user dict.');
+        if (debugging) {
+          debug('Failed to close user dict.');
+        }
         doCallback();
       }
     });
@@ -8745,7 +8806,9 @@ UserDict.prototype = {
 
     this.state_ = UserDict.UserDictState.USER_DICT_DEFRAGMENTED;
 
-    debug('defragment');
+    if (debugging) {
+      debug('defragment');
+    }
   },
 
   /* ==== Private ==== */
@@ -9126,7 +9189,9 @@ UserDict.prototype = {
       if (this.state_ < UserDict.UserDictState.USER_DICT_SCORE_DIRTY) {
         this.state_ = UserDict.UserDictState.USER_DICT_SCORE_DIRTY;
       }
-      debug('_put_lemma(update)');
+      if (debugging) {
+        debug('_put_lemma(update)');
+      }
       return this.ids_[off];
     } else {
       if ((this.dict_info_.limit_lemma_count > 0 &&
@@ -9144,7 +9209,9 @@ UserDict.prototype = {
         // Or simply return and do nothing
         // return 0;
       }
-      debug(flushed ? '_put_lemma(flush+add)' : '_put_lemma(add)');
+      if (debugging) {
+        debug(flushed ? '_put_lemma(flush+add)' : '_put_lemma(add)');
+      }
       var id = this.append_a_lemma(lemma_str, lemma_str_tr, splids, count, lmt);
       return id;
     }
@@ -9376,7 +9443,9 @@ UserDict.prototype = {
    * @return {void} No return value.
    */
   reset: function userDict_reset(file_name, callback) {
-    debug('UserDict#reset');
+    if (debugging) {
+      debug('UserDict#reset');
+    }
     var self = this;
     var json = null;
     function doCallback() {
@@ -9398,7 +9467,9 @@ UserDict.prototype = {
     FileSystemService.write(file_name, dict_str,
         function reset_writeCallback(success) {
       if (!success) {
-        debug('UserDict#reset failed to write dict file: ' + self.dict_file_);
+        if (debugging) {
+          debug('UserDict#reset failed to write dict file: ' + self.dict_file_);
+        }
       }
       doCallback();
     });
@@ -9411,7 +9482,9 @@ UserDict.prototype = {
    * @return {boolean} true if the file is valid.
    */
   validate: function userDict_validate(dictJson) {
-    debug('Validating user dictionary file...');
+    if (debugging) {
+      debug('Validating user dictionary file...');
+    }
     if (!dictJson) {
       return false;
     }
@@ -9422,11 +9495,15 @@ UserDict.prototype = {
       return false;
     }
     if (info.version != UserDict.kUserDictVersion) {
-      debug('User dict version mismatch.');
+      if (debugging) {
+        debug('User dict version mismatch.');
+      }
       return false;
     }
     if (lemma_count != info.lemma_count) {
-      debug('The number of lemmas mismatch.');
+      if (debugging) {
+        debug('The number of lemmas mismatch.');
+      }
       return false;
     }
 
@@ -10124,7 +10201,9 @@ DictList.prototype = {
       this.buf_ = jsonData.buf_;
       this.buf_tr_ = jsonData.buf_tr_;
     } catch (ex) {
-      debug('load_list: ' + ex);
+      if (debugging) {
+        debug('load_list: ' + ex);
+      }
       return false;
     }
 
@@ -10594,7 +10673,9 @@ NGram.prototype = {
         this.lma_freq_idx_.push(idx);
       }
     } catch (ex) {
-      debug('load_ngram: ' + ex);
+      if (debugging) {
+        debug('load_ngram: ' + ex);
+      }
       return false;
     }
 
@@ -10628,7 +10709,10 @@ NGram.prototype = {
    * @param {Array.<DictDef.LemmaEntry>} lemma_arr Lemma array.
    */
   build_unigram: function ngram_build_unigram(lemma_arr) {
-    debug('build_unigram');
+    if (debugging) {
+      debug('build_unigram');
+    }
+
     if (!lemma_arr) {
       return false;
     }
@@ -10708,15 +10792,19 @@ NGram.prototype = {
     this.iterate_codes(freqs, this.freq_codes_df_,
         this.lma_freq_idx_);
 
-    debug('------Language Model Unigram Codebook------');
+    if (debugging) {
+      debug('------Language Model Unigram Codebook------');
+    }
 
     for (var code_pos = 0; code_pos < NGram.kCodeBookSize; code_pos++) {
       var log_score = Math.log(this.freq_codes_df_[code_pos]);
       var final_score =
         NGram.convert_psb_to_score(this.freq_codes_df_[code_pos]);
-      debug(StringUtils.format(
+      if (debugging) {
+        debug(StringUtils.format(
           'code:{0}, probability:{1}, log score:{2}, final score:{3}',
           code_pos, this.freq_codes_df_[code_pos], log_score, final_score));
+      }
       this.freq_codes_[code_pos] = final_score;
     }
 
@@ -11415,7 +11503,9 @@ SpellingTrie.prototype = {
       this.average_score_ = jsonData.average_score_;
       this.spelling_buf_ = jsonData.spelling_buf_;
     } catch (ex) {
-      debug('load_spl_trie: ' + ex);
+      if (debugging) {
+        debug('load_spl_trie: ' + ex);
+      }
       return false;
     }
 
