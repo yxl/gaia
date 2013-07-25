@@ -2006,6 +2006,48 @@ var ArrayUtils = {
     for (var pos = 0; pos < length; pos++) {
       array[start + pos] = arraySorted[pos];
     }
+  },
+
+  /**
+   * Sort part of an array by the given field.
+   * @param {Array} array The array to be sort.
+   * @param {number} start The start position to be sort.
+   * @param {number} length The length from start position. The length should be
+   * less than 65536(2^16).
+   * @param {string} field The field to compare.
+   * @param {boolean} charfield If true, the field is of type char. Otherwise
+   * the field is of type number.
+   * @return {void}  No return value.
+   */
+  sort_by_field: function arrayUtils_sort_by_field(array, start, length, field,
+                                                   charfield) {
+    var len = array.length;
+    if (start < 0 || start >= len || length <= 0 || start + length > len) {
+      return;
+    }
+    if (length >= 65536) {
+      throw "arrayUtils_sort_by_field: length should be less than 65536.";
+    }
+    var helper_array = new Uint32Array(length);
+    var pos;
+    var field_value = 0;
+    var c;
+    for (pos = 0; pos < length; pos++) {
+      if (charfield) {
+        c = array[start + pos][field];
+        field_value = (c.length > 0) ? c.charCodeAt(0) : 0;
+      } else {
+        field_value = array[start + pos][field];
+      }
+      helper_array[pos] = (field_value << 16) + pos;
+    }
+    Array.sort(helper_array);
+    var arrayOriginal = array.slice(start, start + length);
+    var newPos;
+    for (pos = 0; pos < length; pos++) {
+      newPos =  helper_array[pos] & 0xffff;
+      array[start + pos] = arrayOriginal[newPos];
+    }
   }
 };
 
@@ -2056,10 +2098,6 @@ var SearchUtility = {
     return (DictDef.kLemmaIdComposing == lma_id);
   },
 
-  cmp_lpi_with_psb: function searchUtility_cmp_lpi_with_psb(p1, p2) {
-    return SearchUtility.compare(p1.psb, p2.psb);
-  },
-
   cmp_lpi_with_unified_psb: function
       searchUtility_cmp_lpi_with_unified_psb(p1, p2) {
     // The real unified psb is psb1 / lma_len1 and psb2 * lma_len2
@@ -2072,10 +2110,6 @@ var SearchUtility = {
 
   cmp_lpi_with_id: function searchUtility_cmp_lpi_with_id(p1, p2) {
     return SearchUtility.compare(p1.id, p2.id);
-  },
-
-  cmp_lpi_with_hanzi: function searchUtility_cmp_lpi_with_hanzi(p1, p2) {
-    return SearchUtility.compare(p1.hanzi, p2.hanzi);
   },
 
   cmp_lpsi_with_str: function searchUtility_cmp_lpsi_with_str(p1, p2) {
@@ -4175,8 +4209,7 @@ MatrixSearch.prototype = {
         lma_buf[lma_buf_start + pos].hanzi_tr = strs[1].charAt(0);
       }
 
-      ArrayUtils.sort(lma_buf, lma_buf_start, num,
-          SearchUtility.cmp_lpi_with_hanzi);
+      ArrayUtils.sort_by_field(lma_buf, lma_buf_start, num, 'hanzi', true);
 
       for (pos = 0; pos < num; pos++) {
         if (pos > 0 && lma_buf[lma_buf_start + pos].hanzi ==
@@ -4206,8 +4239,7 @@ MatrixSearch.prototype = {
     }
 
     if (sort_by_psb) {
-      ArrayUtils.sort(lma_buf, lma_buf_start, num,
-          SearchUtility.cmp_lpi_with_psb);
+      ArrayUtils.sort_by_field(lma_buf, lma_buf_start, num, 'psb', false);
     }
     return num;
   },
@@ -4406,8 +4438,8 @@ MatrixSearch.prototype = {
         debug('--- lpi_total_ = ' + this.lpi_total_);
       }
 
-      ArrayUtils.sort(this.lpi_items_, 0, this.lpi_total_,
-          SearchUtility.cmp_lpi_with_psb);
+      ArrayUtils.sort_by_field(this.lpi_items_, 0, this.lpi_total_, 'psb',
+                               false);
       if (null == dmi_s && this.spl_trie_.is_half_id(splid)) {
         this.lpi_total_ = lpi_cache.put_cache(splid, this.lpi_items_,
             this.lpi_total_);
