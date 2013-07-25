@@ -1,7 +1,7 @@
 .PHONY: dictbuilder clean
 
 dictbuilder: rawdict.txt rawdict_tr.txt valid.txt pinyinime_dictbuilder.js
-	js -U pinyinime_dictbuilder.js > ../db.json
+	js pinyinime_dictbuilder.js > ../db.json
 
 rawdict.txt: rawdict_utf16_65105_freq.txt
 	iconv -f UTF-16 -t UTF-8 rawdict_utf16_65105_freq.txt -o $@

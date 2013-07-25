@@ -11,7 +11,9 @@ Database JSON files:
 3. Clone a copy of PinyinIME at http://android.googlesource.com/platform/packages/inputmethods/PinyinIME
 
 4. Run the following commands to create the simplifed Chinese database JSON files:
+   $ cd [jspinyin]
    $ cp [PathToPinyinIME]/jni/data/rawdict_utf16_65105_freq.txt data/
+   $ cp [PathToPinyinIME]/jni/data/valid_utf16.txt data/
    $ cd data
    $ make
 

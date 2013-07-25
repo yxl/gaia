@@ -25,7 +25,8 @@ var debug = function jspinyin_debug(str) {
   if (done) {
     return;
   }
-  if (typeof Test != 'undefined') {
+  if (typeof Test != 'undefined' ||
+      typeof Build != 'undefined') {
     print('jspinyin: ' + str + '\n');
   }
 };
