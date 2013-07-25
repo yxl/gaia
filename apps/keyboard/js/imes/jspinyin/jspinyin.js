@@ -286,10 +286,9 @@ IMEngineBase.prototype = {
 
   /**
    * Notifies when a candidate is selected.
-   * @param {String} text The text of the candidate.
    * @param {Object} data User data of the candidate.
    */
-  select: function engineBase_select(text, data) {
+  select: function engineBase_select(data) {
   },
 
   /**
@@ -663,8 +662,8 @@ IMEngine.prototype = {
   /**
    * Override
    */
-  select: function engine_select(text, data) {
-    IMEngineBase.prototype.select.call(this, text, data);
+  select: function engine_select(data) {
+    IMEngineBase.prototype.select.call(this, data);
     var candDataObject = new IMEngine.CandidateData(0, ['', '']);
     candDataObject.deserialize(data);
     if (this._pendingSymbols) {
@@ -683,6 +682,8 @@ IMEngine.prototype = {
     } else {
       // A predication candidate is selected.
       this._historyText = candDataObject.str;
+      var text = this._inputTraditionalChinese ? candDataObject.str_tr :
+        candDataObject.str;
       this._glue.sendString(text);
     }
     this._keypressQueue.push(0);
