@@ -16,7 +16,8 @@
 
         var MatrixSearchTest = {
           _ms: null,
-          
+          _logPanel: null,
+
           init: function test_init() {
             var self = MatrixSearchTest;
             FileSystemService.init(function fileSystemServiceInitCallback() {
@@ -33,35 +34,42 @@
             btn.addEventListener('click', self.search, false);
             btn = document.getElementById('delsearch');
             btn.addEventListener('click', self.delsearch, false);
-            
+
             btn = document.getElementById('predict-button');
             btn.addEventListener('click', self.predict, false);
+
+            btn = document.getElementById('batch');
+            btn.addEventListener('click', self.batch, false);
+
+            self._logPanel = document.getElementById('log');
           },
-            
+
           unint: function test_uninit() {
             var self = MatrixSearchTest;
             FileSystemService.uninit();
             self._ms.uninit();
           },
-          
+
           search: function test_search() {
             var self = MatrixSearchTest;
             var py = document.getElementById('py-text').value;
+            var start = new Date();
             self._ms.search(py);
+            alert(new Date() - start + ' ' + self._ms.get_candidate_num());
           },
-          
+
           reset: function test_reset() {
             var self = MatrixSearchTest;
             self._ms.reset_search();
           },
-          
+
           delsearch: function test_delsearch() {
             var self = MatrixSearchTest;
             var py = self._ms.get_pystr().str;
             var pos = py.length - 1;
             self._ms.delsearch(pos, false, true);
           },
-          
+
           convert: function test_convert() {
             var self = MatrixSearchTest;
             var py = self._ms.get_pystr().str;
@@ -80,7 +88,7 @@
             document.getElementById('py-text').value = py;
             return cands;
           },
-          
+
           predict: function test_predict() {
             var self = MatrixSearchTest;
             var predictStr = document.getElementById('predict-input').value;
@@ -98,6 +106,37 @@
             var display = document.getElementById('predict-display');
             display.innerHTML = predicts + '<br />' + num +
                 ' prediction word(s) for ' + predictStr;
+          },
+
+          batch: function test_batch() {
+            var self = MatrixSearchTest;
+            self.clear_log();
+            const TIMES = 1000;
+            var testcases = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'z', 'ba', 'da', 'fa', 'ga', 'ha'];
+            function run() {
+              var testcase = testcases.shift();
+              var start = new Date();
+              for (var i = 0; i < TIMES; i++) {
+                self._ms.reset_search();
+                self._ms.search(testcase);
+              }
+              self.log(testcase + ' X 100: ' + Math.round((new Date() - start) / TIMES * 100) + 'ms');
+              if (testcases.length > 0) {
+                setTimeout(run, 0);
+              }
+            }
+            run();
+          },
+
+          log: function test_log(line) {
+            var self = MatrixSearchTest;
+            var logElem = document.createElement('p');
+            logElem.textContent = line;
+            self._logPanel.appendChild(logElem);
+          },
+
+          clear_log: function test_clear_log() {
+            MatrixSearchTest._logPanel.textContent = '';
           }
         };
         window.addEventListener('load', MatrixSearchTest.init, false);
@@ -120,6 +159,10 @@
         <input type="text" id="predict-input" placeholder="Enter a Word" value="你" />
         <input type="button" id="predict-button" value="Predict" />
         <span id="predict-display" />
+    </div>
+    <hr />
+    <input type="button" id="batch" value="Batch run" />
+    <div id="log">
     </div>
 </body>
 </html>
