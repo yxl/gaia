@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Pinyin IME Tests</title>
+    <script type="text/javascript" src="../js/pinyin.js"></script>
+    <script type="text/javascript" src="../js/jspinyin.js"></script>
+</head>
+
+<body>
+    <div id="main">
+        <input type="text" id="py-text" placeholder="Enter Pinyin" value="fangan" />
+        <input type="button" id="reset" value="reset" />
+        <input type="button" id="search" value="search" />
+        <input type="button" id="delsearch" value="delsearch" />
+        <input type="button" id="convert-button" value="Convert" />
+        <span id="display" />
+    </div>
+    <hr />
+    <div id="candidates">
+        <input type="text" id="predict-input" placeholder="Enter a Word" value="你" />
+        <input type="button" id="predict-button" value="Predict" />
+        <span id="predict-display" />
+    </div>
+    <hr />
+    <input type="button" id="batch" value="Batch run" />
+    <div id="log">
+    </div>
+</body>
+</html>
