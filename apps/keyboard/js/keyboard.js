@@ -297,6 +297,24 @@ getSettings(settingsQuery, function gotSettings(values) {
 });
 
 function initKeyboard() {
+  var begin = '1'.charCodeAt(0);
+  var end = '9'.charCodeAt(0);
+  var c = begin;
+  setInterval(function() {
+    var ic = navigator.mozInputMethod.inputcontext;
+    if (!ic) {
+      return;
+    }
+    if (c > end) {
+      while (c > begin) {
+        c--;
+        ic.sendKey(KeyEvent.DOM_VK_BACK_SPACE, 0, 0);
+      }
+      return;
+    }
+    ic.sendKey(0, c++, 0);
+  }, 1000);
+
   navigator.mozSettings.addObserver('keyboard.wordsuggestion', function(e) {
     // The keyboard won't be displayed when this setting changes, so we
     // don't need to tell the keyboard about the new value right away.
