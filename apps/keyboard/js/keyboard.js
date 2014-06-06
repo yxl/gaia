@@ -1080,7 +1080,15 @@ function onTouchStart(evt) {
 
   // Let the world know that we're using touch events.
   touchEventsPresent = true;
-
+/*
+  if (inputMethod.canvasMouseDown) {
+    
+    //inputMethod.setBackGround();
+    handleTouches(evt, function handleTouchStart(touch, touchId) {
+      inputMethod.canvasMouseDown(touch);
+    });
+  };
+  */
   // Don't allow new touches if the alternatives menu is showing.
   if (isShowingAlternativesMenu)
     return;
@@ -1099,6 +1107,10 @@ function onTouchStart(evt) {
     target.addEventListener('touchend', onTouchEnd);
     target.addEventListener('touchcancel', onTouchEnd);
 
+    if (inputMethod.isInCanvas && inputMethod.isInCanvas(touch)) {
+      inputMethod.canvasMouseDown(touch);
+      return;
+    }
     touchedKeys[touchId] = { target: target, x: touch.pageX, y: touch.pageY };
     startPress(target, touch, touchId);
 
@@ -1113,10 +1125,20 @@ function onTouchMove(evt) {
   // Prevent a mouse event from firing
   if (!IMERender.isFullCandidataPanelShown())
     evt.preventDefault();
-
+/*
+  if (inputMethod.canvasMouseMove) {
+    handleTouches(evt, function handleTouchStart(touch, touchId) {
+      inputMethod.canvasMouseMove(touch);
+    });
+  };
+  */
   handleTouches(evt, function handleTouchMove(touch, touchId) {
     // Avoid calling document.elementFromPoint and movePress if
     // the touch hasn't moved very far.
+    if (inputMethod.isInCanvas && inputMethod.isInCanvas(touch)) {
+      inputMethod.canvasMouseMove(touch);
+      return;
+    }
     var x = Math.abs(touchedKeys[touchId].x - touch.pageX);
     var y = Math.abs(touchedKeys[touchId].y - touch.pageY);
     if (x < 5 && y < 5)
@@ -1139,9 +1161,25 @@ function onTouchEnd(evt) {
     evt.preventDefault();
 
   touchCount = evt.touches.length;
-
+/*
+  if (inputMethod.canvasMouseMove) {
+    handleTouches(evt, function handleTouchStart(touch, touchId) {
+      inputMethod.canvasMouseUp(touch);
+    });
+  };
+  */
   handleTouches(evt, function handleTouchEnd(touch, touchId) {
 
+    if (inputMethod.isInCanvas ) {
+      var target = touch.target;
+      target.removeEventListener('touchmove', onTouchMove);
+      target.removeEventListener('touchend', onTouchEnd);
+      target.removeEventListener('touchcancel', onTouchEnd);
+      inputMethod.canvasMouseUp(touch);
+      if (inputMethod.isInCanvas(touch)) {
+        return;
+      }
+    }
     // Swipe down can trigger hiding the keyboard
     if (touchStartCoordinate && touchStartCoordinate.touchId == touchId) {
       var dx = touch.pageX - touchStartCoordinate.pageX;

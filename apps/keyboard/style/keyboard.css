@@ -706,3 +706,7 @@ bubble above the key when you tap and hold. */
 .keyboard-key > .visual-wrapper > span[data-label="া"] {
   font-size: 1.7rem;
 }
+
+.half-full-screen > .visual-wrapper > span{
+  font-size: 1rem;
+}
