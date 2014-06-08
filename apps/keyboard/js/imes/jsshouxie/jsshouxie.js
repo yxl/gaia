@@ -215,7 +215,7 @@ IMEngine.prototype = {
     },
     
     getMousePoint: function(event) {
-      var canvas = document.getElementById('handwriting');
+      var canvas = IMERender.activeIme.querySelector('#handwriting');
       if (!canvas) {
         return [0, 0];
       }
@@ -249,7 +249,8 @@ IMEngine.prototype = {
     _height: 280,
     
     init: function(width, height) {
-      this._ctx = document.getElementById('handwriting').getContext('2d');
+      var canvas = IMERender.activeIme.querySelector('#handwriting');
+      this._ctx = canvas.getContext('2d');
       this._ctx.strokeStyle = "#df4b26";
       this._ctx.lineJoin = "round";
       this._ctx.lineWidth = 5;
@@ -278,7 +279,7 @@ IMEngine.prototype = {
   },
 
   isInCanvas: function(event) {
-    var canvas = document.getElementById('handwriting');
+    var canvas = IMERender.activeIme.querySelector('#handwriting');
     if (!canvas) {
       return false;
     };
@@ -289,10 +290,11 @@ IMEngine.prototype = {
       this._isInited = true;
     }
     var canvasRect = canvas.getBoundingClientRect();
-    var left = canvasRect.left - document.body.clientLeft;
-    var top = canvasRect.top - document.body.clientTop;
-    var right = canvasRect.right - document.body.clientLeft;
-    var bottom = canvasRect.bottom - document.body.clientTop;
+    var body = canvas.ownerDocument.body;
+    var left = canvasRect.left - body.clientLeft;
+    var top = canvasRect.top - body.clientTop;
+    var right = canvasRect.right - body.clientLeft;
+    var bottom = canvasRect.bottom - body.clientTop;
     if (event.pageX > left && event.pageX < right && event.pageY > top && event.pageY < bottom) {
       return true;
     } else {
