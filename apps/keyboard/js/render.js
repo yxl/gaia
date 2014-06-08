@@ -166,40 +166,22 @@ const IMERender = (function() {
 
     layout.upperCase = layout.upperCase || {};
 
-    //var candidatePanel = activeIme.querySelector('.keyboard-candidate-panel');
-    //    var rect = candidatePanel? candidatePanel.getBoundingClientRect() : null;
-    //    var candidatePanelHeight = rect ? rect.bottom - rect.top : 0;
-    //dump("ime.clientHeight = " + ime.clientHeight + "\n");
-    //dump("candidatePanel.height = " + candidatePanelHeight + '\n');
-        
     var content = document.createDocumentFragment();
+
+    // Builds handwriting pad if any.
+    var handwriting = layout.handwriting;
+    if (handwriting) {
+      var pad = document.createElement('canvas');
+      pad.id = 'handwriting';
+      pad.style.cssFloat = 'left';
+      var pixelWidth = placeHolderWidth * handwriting.width;
+      pad.style.width = pixelWidth + 'px';
+      pad.width = pixelWidth;
+      pad.dataset.rowspan = handwriting.rowspan;
+      content.appendChild(pad);
+    }
+
     layout.keys.forEach((function buildKeyboardRow(row, nrow) {
-      if (row.length === 1 && row[0].value == "canvas") {
-        var candidatePanel = activeIme.querySelector('.keyboard-candidate-panel');
-        var rect = candidatePanel? candidatePanel.getBoundingClientRect() : null;
-        var candidatePanelHeight = rect ? rect.bottom - rect.top : 0;
-        
-        //var totalHeight = ime.clientHeight - candidatePanelHeight;
-        //dump("ime.clientHeight = " + ime.clientHeight + "\n");
-        //dump("candidatePanel.height = " + Math.floor(totalHeight*3/4) + '\n');
-        var kbRow = document.createElement('canvas');
-        kbRow.id="c";
-        kbRow.style.cssFloat = 'left';
-        var ratio = 7;
-        var keyWidth = placeHolderWidth * ratio;
-        kbRow.style.width = keyWidth + 'px';
-        kbRow.width = keyWidth;
-        kbRow.style.height = "20rem";//Math.floor(totalHeight*4/5)+'px';
-       
-        kbRow.style.border = '2px solid black';
-        kbRow.style.backgroundColor = '#ebeced'
-        content.appendChild(kbRow);
-        // dump("height = " +document.getElementById('c').clientHeight +  '\n');
-        //kbRow = document.getElementById('c');
-        
-        //kbRow.height = (kbRow.getBoundingClientRect().bottom - kbRow.getBoundingClientRect().top) + "px";
-        return;
-      }
       var kbRow = document.createElement('div');
       var rowLayoutWidth = 0;
       kbRow.classList.add('keyboard-row');
@@ -262,6 +244,10 @@ const IMERender = (function() {
         kbRow.appendChild(buildKey(outputChar, className, keyWidth + 'px',
           dataset, key.altNote, attributeList));
       }));
+
+      if (handwriting && handwriting.rowspan > nrow) {
+        rowLayoutWidth += handwriting.width;
+      }
 
       kbRow.dataset.layoutWidth = rowLayoutWidth;
 
@@ -797,6 +783,19 @@ const IMERender = (function() {
     var rows = activeIme.querySelectorAll('.keyboard-row');
 
     setKeyWidth();
+
+    // Set the height of the handwriting pad.
+    var pad = activeIme.querySelector('#handwriting');
+    if (pad) {
+      var rowCount = rows.length || 3;
+      var candidatePanel = activeIme.querySelector('.keyboard-candidate-panel');
+      var candidatePanelHeight = candidatePanel ? candidatePanel.clientHeight : 0;
+      var rowHeight = rows[0].clientHeight;
+      var pixelHeight = Math.floor(rowHeight * pad.dataset.rowspan);
+      console.log('pixelHeight:' + pixelHeight);
+      pad.height = pixelHeight;
+      pad.style.height = pixelHeight + 'px';
+    }
   };
 
   //

@@ -4,23 +4,25 @@ Keyboards['zh-Hans-Shouxie'] = {
   needsCandidatePanel: true,
   disableAlternateLayout: true,
   imEngine: 'jsshouxie',
-  types: ['text', 'url', 'email'],
+  types: ['text'],
   width: 10,
   textLayoutOverwrite: {
     ',': false,
     '.': false
   },
+  handwriting: {
+    width: 8.5,
+    rowspan: 4
+  },
   keys: [
     [
-      {value: 'canvas'},
+      { value: '…', ratio: 1.5 }
     ], [
-      {value: '…'},
+      { value: '？', ratio: 1.5 }
     ], [
-      {value: '？'},
+      { value: '，', ratio: 1.5 }
     ], [
-      { value: '，' },
-    ], [
-      { value: '⌫', keyCode: KeyEvent.DOM_VK_BACK_SPACE },
+      { value: '⌫', keyCode: KeyEvent.DOM_VK_BACK_SPACE, ratio: 1.5 }
     ], [
       { value: '?123', keyCode: -21, ratio: 1.5 },
       { value: '空格', keyCode: KeyEvent.DOM_VK_SPACE, ratio: 5 },

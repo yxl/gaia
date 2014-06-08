@@ -215,7 +215,7 @@ IMEngine.prototype = {
     },
     
     getMousePoint: function(event) {
-      var canvas = document.getElementById("c");
+      var canvas = document.getElementById('handwriting');
       if (!canvas) {
         return [0, 0];
       }
@@ -249,7 +249,7 @@ IMEngine.prototype = {
     _height: 280,
     
     init: function(width, height) {
-      this._ctx = document.getElementById('c').getContext('2d');
+      this._ctx = document.getElementById('handwriting').getContext('2d');
       this._ctx.strokeStyle = "#df4b26";
       this._ctx.lineJoin = "round";
       this._ctx.lineWidth = 5;
@@ -278,7 +278,7 @@ IMEngine.prototype = {
   },
 
   isInCanvas: function(event) {
-    var canvas = document.getElementById("c");
+    var canvas = document.getElementById('handwriting');
     if (!canvas) {
       return false;
     };

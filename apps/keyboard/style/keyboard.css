@@ -710,3 +710,8 @@ bubble above the key when you tap and hold. */
 .half-full-screen > .visual-wrapper > span{
   font-size: 1rem;
 }
+
+/* Handwriting */
+#handwriting {
+  background-color: #ebeced;
+}
