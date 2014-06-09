@@ -220,6 +220,9 @@ IMEngine.prototype = {
         return;
       }
       var str = HWREngine.recognize(this._strokePoints);
+      if (jsshouxie._firstCandidate) {
+        jsshouxie.select(jsshouxie._firstCandidate, {});
+      }
       jsshouxie._sendCandidates(HWREngine.recognize(this._strokePoints));
       jsshouxie._board.clear();
     },
@@ -581,6 +584,7 @@ IMEngine.prototype = {
     debug('empty.');
     this._firstCandidate = '';
     this._sendCandidates([]);
+    this._board.clear();
   },
 
   /**
