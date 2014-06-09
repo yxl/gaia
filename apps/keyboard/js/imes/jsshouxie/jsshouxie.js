@@ -67,7 +67,8 @@ var assert = function jsshouxie_assert(condition, msg) {
 if (!KeyEvent) {
   var KeyEvent = {
     DOM_VK_BACK_SPACE: 0x8,
-    DOM_VK_RETURN: 0xd
+    DOM_VK_RETURN: 0xd,
+    DOM_VK_SPACE: 0x20
   };
 }
 
@@ -172,10 +173,6 @@ IMEngine.prototype = {
   // Implements IMEngineBase
   __proto__: new IMEngineBase(),
 
-  // Buffer limit will force output the longest matching terms
-  // if the length of the syllables buffer is reached.
-  _kBufferLenLimit: 30,
-
   // Remember the candidate length of last searching result because we don't
   // want to output all candidates at a time.
   // Set it to 0 when we don't need the candidates buffer anymore.
@@ -183,13 +180,6 @@ IMEngine.prototype = {
 
   _workerTimeout: 600000,
 
-  /**
-   * The last selected text used to generate prediction.
-   * @type string
-   */
-  _historyText: '',
-
-  _pendingSymbols: '',
   _firstCandidate: '',
   _keypressQueue: [],
   _isWorking: false,
@@ -231,7 +221,6 @@ IMEngine.prototype = {
       }
       var str = HWREngine.recognize(this._strokePoints);
       jsshouxie._sendCandidates(HWREngine.recognize(this._strokePoints));
-      jsshouxie._sendPendingSymbols();
       jsshouxie._board.clear();
     },
     
@@ -325,12 +314,6 @@ IMEngine.prototype = {
     this._board.addStrokePoint(-1, 0);
   },
 
-  _sendPendingSymbols: function engine_sendPendingSymbols() {
-    debug('SendPendingSymbol: ' + this._pendingSymbols);
-    var self = this;
-    self._glue.setComposition(self._firstCandidate.trim());
-  },
-
   /**
    * Send candidates list.
    * @param {Array.<string>} candidates The candidates to be sent.
@@ -348,6 +331,11 @@ IMEngine.prototype = {
     }
 
     this._glue.sendCandidates(list);
+    if (this._firstCandidate) {
+      this._glue.setComposition(this._firstCandidate);
+    } else {
+      this._glue.endComposition();
+    }
   },
 
   _start: function engine_start() {
@@ -370,131 +358,51 @@ IMEngine.prototype = {
 
     var code = this._keypressQueue.shift();
 
-    if (code == 0) {
-      // This is a select function operation.
-      this._updateCandidatesAndSymbols(this._next.bind(this));
-      return;
-    }
-
     debug('key code: ' + code);
 
     // Backspace - delete last input symbol if exists
     if (code === KeyEvent.DOM_VK_BACK_SPACE) {
       debug('Backspace key');
 
-      if (!this._pendingSymbols) {
-        if (this._firstCandidate) {
-          debug('Remove candidates.');
+      if (this._firstCandidate) {
+        debug('Remove candidates.');
 
-          // prevent updateCandidateList from making the same suggestions
-          this.empty();
-        } else {
-          // pass the key to IMEManager for default action
-          debug('Default action.');
-          this._glue.sendKey(code);
-        }
-        this._next();
+        // prevent updateCandidateList from making the same suggestions
+        this.empty();
       } else {
-        this._pendingSymbols = this._pendingSymbols.substring(0,
-          this._pendingSymbols.length - 1);
-
-        this._updateCandidatesAndSymbols(this._next.bind(this));
+        // pass the key to IMEManager for default action
+        debug('Default action.');
+        this._glue.sendKey(code);
       }
+      this._next();
 
       return;
     }
 
     // Select the first candidate if needed.
-    if (code === KeyEvent.DOM_VK_RETURN ||
-        !this._isShouxieKey(code) ||
-        this._pendingSymbols.length >= this._kBufferLenLimit) {
-      debug('Non-pinyin key is pressed or the input is too long.');
-      var sendKey = true;
-      if (this._firstCandidate) {
-        if (this._pendingSymbols) {
-          // candidate list exists; output the first candidate
-          debug('Sending first candidate.');
-          this._glue.endComposition(this._firstCandidate);
-          // no return here
-          if (code === KeyEvent.DOM_VK_RETURN) {
-            sendKey = false;
-          }
-        }
-        this._sendCandidates([]);
-      }
+    debug('Non-pinyin key is pressed or the input is too long.');
+    var sendKey = true;
+    if (this._firstCandidate) {
+      this._glue.endComposition(this._firstCandidate);
+      // candidate list exists; output the first candidate
+      debug('Sending first candidate.');
 
-      //pass the key to IMEManager for default action
-      debug('Default action.');
+      // no return here
+      console.log([code, KeyEvent.DOM_VK_SPACE]);
+      if (code === KeyEvent.DOM_VK_RETURN ||
+          code === KeyEvent.DOM_VK_SPACE) {
+        sendKey = false;
+      }
       this.empty();
-      if (sendKey) {
-        this._glue.sendKey(code);
-      }
-      this._next();
-      return;
     }
 
-    var symbol = String.fromCharCode(code);
-
-    debug('Processing symbol: ' + symbol);
-
-    // add symbol to pendingSymbols
-    this._appendNewSymbol(code);
-    this._updateCandidatesAndSymbols(this._next.bind(this));
-  },
-
-  _isShouxieKey: function engine_isShouxieKey(code) {
-    if (this._keyboard == 'zh-Hans-Shouxie') {
-      // '
-      if (code == 39) {
-        return true;
-      }
-
-      // a-z
-      if (code >= 97 && code <= 122) {
-        return true;
-      }
+    //pass the key to IMEManager for default action
+    debug('Default action.');
+    this.empty();
+    if (sendKey) {
+      this._glue.sendKey(code);
     }
-
-    return false;
-  },
-
-  _appendNewSymbol: function engine_appendNewSymbol(code) {
-    var symbol = String.fromCharCode(code);
-    this._pendingSymbols += symbol;
-  },
-
-  _updateCandidatesAndSymbols: function engine_updateCandsAndSymbols(callback) {
-    var self = this;
-    this._updateCandidateList(function() {
-      self._sendPendingSymbols();
-      callback();
-    });
-  },
-
-  _updateCandidateList: function engine_updateCandidateList(callback) {
-    debug('Update Candidate List.');
-
-    var self = this;
-    var numberOfCandidatesPerRow = this._glue.getNumberOfCandidatesPerRow ?
-      this._glue.getNumberOfCandidatesPerRow() : Number.Infinity;
-
-    this._candidatesLength = 0;
-
-    if (!this._pendingSymbols) {
-      // If there is no pending symbols, make prediction with the previous
-      // select words.
-      if (this._historyText) {
-        debug('Buffer is empty; make suggestions based on select term.');
-
-      } else {
-        this._sendCandidates([]);
-        callback();
-      }
-    } else {
-      // Update the candidates list by the pending pinyin string.
-      this._historyText = '';
-
-    }
+    this._next();
   },
 
   _alterKeyboard: function engine_changeKeyboard(keyboard) {
@@ -660,27 +568,9 @@ IMEngine.prototype = {
   select: function engine_select(text, data) {
     IMEngineBase.prototype.select.call(this, text, data);
 
-    var self = this;
-    var nextStep = function(text) {
-      if (text) {
-        /*
-        if (self._pendingSymbols) {
-          self._pendingSymbols = '';
-          self._glue.endComposition(text);
-        } else {
-        */
-          self._glue.sendString(text);
-        //}
-        self._historyText = text;
-        self._candidatesLength = 0;
-        self.empty();
-      }
-      self._keypressQueue.push(0);
-      self._start();
-    };
-      // A predication candidate is selected.
-      nextStep(text);
-    //}
+    this._glue.sendString(text);
+    this.empty();
+    this._start();
   },
 
   /**
@@ -689,10 +579,7 @@ IMEngine.prototype = {
   empty: function engine_empty() {
     IMEngineBase.prototype.empty.call(this);
     debug('empty.');
-    this._pendingSymbols = '';
-    this._historyText = '';
     this._firstCandidate = '';
-    this._sendPendingSymbols();
     this._sendCandidates([]);
   },
 
