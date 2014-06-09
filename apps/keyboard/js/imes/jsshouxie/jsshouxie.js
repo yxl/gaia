@@ -216,14 +216,14 @@ IMEngine.prototype = {
     },
     
     sendStrokePoints: function() {
-      if (this._strokePoints.length == 0) {
+      if (this._strokePoints.length <= 1) {
         return;
       }
       var str = HWREngine.recognize(this._strokePoints);
       if (jsshouxie._firstCandidate) {
         jsshouxie.select(jsshouxie._firstCandidate, {});
       }
-      jsshouxie._sendCandidates(HWREngine.recognize(this._strokePoints));
+      jsshouxie._sendCandidates(str);
       jsshouxie._board.clear();
     },
     
@@ -502,8 +502,6 @@ IMEngine.prototype = {
   init: function engine_init(glue) {
     IMEngineBase.prototype.init.call(this, glue);
     debug('init.');
-    
-    
   },
 
   /**
@@ -608,8 +606,13 @@ IMEngine.prototype = {
 
     this._glue.alterKeyboard(keyboard);
 
-
     this._isActive = true;
+
+    var canvas = IMERender.activeIme.querySelector('.handwriting');
+    if (!canvas) {
+      return;
+    };
+    this._render.init(canvas.width, canvas.height);
   },
 
   /**
