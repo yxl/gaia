@@ -215,7 +215,7 @@ IMEngine.prototype = {
     },
     
     getMousePoint: function(event) {
-      var canvas = IMERender.activeIme.querySelector('#handwriting');
+      var canvas = IMERender.activeIme.querySelector('.handwriting');
       if (!canvas) {
         return [0, 0];
       }
@@ -249,7 +249,7 @@ IMEngine.prototype = {
     _height: 280,
     
     init: function(width, height) {
-      var canvas = IMERender.activeIme.querySelector('#handwriting');
+      var canvas = IMERender.activeIme.querySelector('.handwriting');
       this._ctx = canvas.getContext('2d');
       this._ctx.strokeStyle = "#df4b26";
       this._ctx.lineJoin = "round";
@@ -279,13 +279,12 @@ IMEngine.prototype = {
   },
 
   isInCanvas: function(event) {
-    var canvas = IMERender.activeIme.querySelector('#handwriting');
+    var canvas = IMERender.activeIme.querySelector('.handwriting');
     if (!canvas) {
       return false;
     };
     if (!this._isInited) {
       canvas.height = canvas.clientHeight;
-      //canvas.addEventListener("touchleave",this.canvasMouseUp);
       this._render.init(canvas.width, canvas.height);
       this._isInited = true;
     }

@@ -172,7 +172,7 @@ const IMERender = (function() {
     var handwriting = layout.handwriting;
     if (handwriting) {
       var pad = document.createElement('canvas');
-      pad.id = 'handwriting';
+      pad.className = 'handwriting';
       pad.style.cssFloat = 'left';
       var pixelWidth = placeHolderWidth * handwriting.width;
       pad.style.width = pixelWidth + 'px';
@@ -785,7 +785,7 @@ const IMERender = (function() {
     setKeyWidth();
 
     // Set the height of the handwriting pad.
-    var pad = activeIme.querySelector('#handwriting');
+    var pad = activeIme.querySelector('.handwriting');
     if (pad) {
       var rowCount = rows.length || 3;
       var candidatePanel = activeIme.querySelector('.keyboard-candidate-panel');
