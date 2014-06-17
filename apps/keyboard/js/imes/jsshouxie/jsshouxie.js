@@ -20,54 +20,6 @@ function importScripts(urls, callback) {
   document.body.appendChild(script);
 }
 
-var debugging = false;
-var debug = function jsshouxie_debug(str) {
-  if (!debugging) {
-    return;
-  }
-
-  var done = false;
-  if (typeof window != 'undefined' && window.dump) {
-    window.dump('jsshouxie: ' + str + '\n');
-    done = true;
-  }
-  if (typeof console != 'undefined' && console.log) {
-    console.log('jsshouxie: ' + str);
-    if (arguments.length > 1) {
-      console.log.apply(this, arguments);
-    }
-    done = true;
-  }
-  if (done) {
-    return;
-  }
-  if (typeof Test != 'undefined') {
-    print('jsshouxie: ' + str + '\n');
-  }
-};
-
-var assert = function jsshouxie_assert(condition, msg) {
-  if (!debugging)
-    return;
-  if (!condition) {
-    var str = typeof msg === 'undefined' ? assert.caller.toString() : msg;
-    if (typeof alert === 'function') {
-      alert(msg);
-    } else {
-      throw str;
-    }
-  }
-};
-
-/* for non-Mozilla browsers */
-if (typeof KeyEvent === 'undefined') {
-  var KeyEvent = {
-    DOM_VK_BACK_SPACE: 0x8,
-    DOM_VK_RETURN: 0xd,
-    DOM_VK_SPACE: 0x20
-  };
-}
-
 var IMEngineBase = function engineBase_constructor() {
   this._glue = {};
 };
@@ -174,45 +126,6 @@ IMEngine.prototype = {
   _timeOutId: null,
   _writing: false,
   _isInited: false,
-  
-  _board: {
-    _strokePoints: [],
-    
-    addStrokePoint: function(x, y) {
-      if (x < -1 || y < -1) {
-        dump("dd");
-      }
-      this._strokePoints.push(x, y);
-    },
-    
-    getMousePoint: function(event) {
-      var canvas = IMERender.activeIme.querySelector('.handwriting');
-      if (!canvas) {
-        return [0, 0];
-      }
-      var canvasRect = canvas.getBoundingClientRect();
-      var posX = canvasRect.left - document.body.clientLeft;
-      var posY = canvasRect.top - document.body.clientTop;
-      return [event.pageX - posX, event.pageY - posY];
-    },
-    
-    sendStrokePoints: function() {
-      if (this._strokePoints.length <= 1) {
-        return;
-      }
-      var str = HWREngine.recognize(this._strokePoints);
-      if (jsshouxie._firstCandidate) {
-        jsshouxie.select(jsshouxie._firstCandidate, {});
-      }
-      jsshouxie._sendCandidates(str);
-      jsshouxie._board.clear();
-    },
-    
-    clear: function() {
-        this._strokePoints = [];
-        Render.clear();
-    },
-  },
 
   isInCanvas: function(event) {
     var canvas = IMERender.activeIme.querySelector('.handwriting');
@@ -239,8 +152,8 @@ IMEngine.prototype = {
 
   canvasMouseDown: function engine_mousedown(event){
     clearTimeout(this._timeOutId);
-    var point = this._board.getMousePoint(event);
-    this._board.addStrokePoint(point[0], point[1]);
+    var point = Board.getMousePoint(event);
+    Board.addStrokePoint(point[0], point[1]);
     this._writing = true;
     Render.draw(point[0], point[1], true);
   },
@@ -250,15 +163,15 @@ IMEngine.prototype = {
       return;
     }
     
-    var point = this._board.getMousePoint(event);
-    this._board.addStrokePoint(point[0], point[1]);
+    var point = Board.getMousePoint(event);
+    Board.addStrokePoint(point[0], point[1]);
     Render.draw(point[0], point[1], false);
   },
 
   canvasMouseUp: function engine_mouseup(event) {
-    this._timeOutId = setTimeout(this._board.sendStrokePoints.bind(this._board), 500);
+    this._timeOutId = setTimeout(Board.sendStrokePoints.bind(Board), 500);
     this._writing = false;
-    this._board.addStrokePoint(-1, 0);
+    Board.addStrokePoint(-1, 0);
   },
 
   /**
@@ -290,59 +203,38 @@ IMEngine.prototype = {
       return;
 
     this._isWorking = true;
-    debug('Start keyQueue loop.');
     this._next();
   },
 
   _next: function engine_next() {
-    debug('Processing keypress');
-
     if (!this._keypressQueue.length) {
-      debug('keyQueue emptied.');
       this._isWorking = false;
       return;
     }
 
     var code = this._keypressQueue.shift();
 
-    debug('key code: ' + code);
-
-    // Backspace - delete last pending input if exists
-    if (code === KeyEvent.DOM_VK_BACK_SPACE) {
-      debug('Backspace key');
-
-      if (this._firstCandidate) {
-        debug('Remove candidates.');
-        this.empty();
-      } else {
-        // pass the key to IMEManager for default action
-        debug('Default action.');
-        this._glue.sendKey(code);
-      }
-      this._next();
-
-      return;
-    }
-
-    // Select the first candidate if needed.
     var sendKey = true;
-    if (this._firstCandidate) {
-      // candidate list exists; output the first candidate
-      debug('Sending first candidate.');
-      this._glue.endComposition(this._firstCandidate);
 
-      // no return or space here
-      console.log([code, KeyEvent.DOM_VK_SPACE]);
-      if (code === KeyEvent.DOM_VK_RETURN ||
-          code === KeyEvent.DOM_VK_SPACE) {
-        sendKey = false;
+    if (this._firstCandidate) {
+      switch (code) {
+        case KeyEvent.DOM_VK_BACK_SPACE:
+          sendKey = false;
+          break;
+        case KeyEvent.DOM_VK_RETURN:
+        case KeyEvent.DOM_VK_SPACE:
+          // candidate list exists; output the first candidate
+          this._glue.endComposition(this._firstCandidate);
+          sendKey = false;
+          break;
+        default:
+          this._glue.endComposition(this._firstCandidate);
+          break;
       }
       this.empty();
     }
 
     //pass the key to IMEManager for default action
-    debug('Default action.');
-    this.empty();
     if (sendKey) {
       this._glue.sendKey(code);
     }
@@ -367,10 +259,8 @@ IMEngine.prototype = {
    */
   init: function engine_init(glue) {
     IMEngineBase.prototype.init.call(this, glue);
-    debug('init.');
     importScripts(['js/imes/jsshouxie/zinnia-engine.js',
                    'js/imes/jsshouxie/emscripten_zinnia.js'], function() {
-      debug('loaded\n');
     });
   },
 
@@ -433,10 +323,9 @@ IMEngine.prototype = {
    */
   empty: function engine_empty() {
     IMEngineBase.prototype.empty.call(this);
-    debug('empty.');
     this._firstCandidate = '';
     this._sendCandidates([]);
-    this._board.clear();
+    Board.clear();
   },
 
   /**
@@ -446,7 +335,6 @@ IMEngine.prototype = {
     IMEngineBase.prototype.activate.call(this, language, state, options);
 
     var inputType = state.type;
-    debug('Activate. Input type: ' + inputType);
 
     var keyboard = 'zh-Hans-Shouxie';
     if (inputType == '' || inputType == 'text' || inputType == 'textarea') {
@@ -469,7 +357,6 @@ IMEngine.prototype = {
    */
   deactivate: function engine_deactivate() {
     IMEngineBase.prototype.deactivate.call(this);
-    debug('Deactivate.');
 
     if (!this._isActive)
       return;
@@ -517,6 +404,45 @@ var Render = {
     this._ctx.stroke();
     this._lastX = x;
     this._lastY = y;
+  },
+};
+
+var Board = {
+  _strokePoints: [],
+
+  addStrokePoint: function(x, y) {
+    if (x < -1 || y < -1) {
+      dump("dd");
+    }
+    this._strokePoints.push(x, y);
+  },
+
+  getMousePoint: function(event) {
+    var canvas = IMERender.activeIme.querySelector('.handwriting');
+    if (!canvas) {
+      return [0, 0];
+    }
+    var canvasRect = canvas.getBoundingClientRect();
+    var posX = canvasRect.left - document.body.clientLeft;
+    var posY = canvasRect.top - document.body.clientTop;
+    return [event.pageX - posX, event.pageY - posY];
+  },
+
+  sendStrokePoints: function() {
+    if (this._strokePoints.length <= 1) {
+      return;
+    }
+    var str = HWREngine.recognize(this._strokePoints);
+    if (jsshouxie._firstCandidate) {
+      jsshouxie.select(jsshouxie._firstCandidate, {});
+    }
+    jsshouxie._sendCandidates(str);
+    Board.clear();
+  },
+
+  clear: function() {
+      this._strokePoints = [];
+      Render.clear();
   },
 };
 
