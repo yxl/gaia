@@ -3,6 +3,8 @@
 
 'use strict';
 
+(function() {
+
 function importScripts(urls, callback) {
   if (urls.length > 1) {
     // Load the nth file as soon as everything up to the
@@ -18,12 +20,6 @@ function importScripts(urls, callback) {
   document.body.appendChild(script);
 }
 
-(function() {
-  importScripts(['js/imes/jsshouxie/zinnia-engine.js', 'js/imes/jsshouxie/emscripten_zinnia.js'], function() {
-      console.log('loaded\n');
-    });
-
-    
 var debugging = false;
 var debug = function jsshouxie_debug(str) {
   if (!debugging) {
@@ -64,7 +60,7 @@ var assert = function jsshouxie_assert(condition, msg) {
 };
 
 /* for non-Mozilla browsers */
-if (!KeyEvent) {
+if (typeof KeyEvent === 'undefined') {
   var KeyEvent = {
     DOM_VK_BACK_SPACE: 0x8,
     DOM_VK_RETURN: 0xd,
@@ -125,12 +121,6 @@ IMEngineBase.prototype = {
   },
 
   /**
-   * Destruction.
-   */
-  uninit: function engineBase_uninit() {
-  },
-
-  /**
    * Notifies when a keyboard key is clicked.
    * @param {number} keyCode The key code of an integer number.
    */
@@ -164,7 +154,6 @@ IMEngineBase.prototype = {
   }
 };
 
-
 var IMEngine = function engine_constructor() {
   IMEngineBase.call(this);
 };
@@ -173,19 +162,11 @@ IMEngine.prototype = {
   // Implements IMEngineBase
   __proto__: new IMEngineBase(),
 
-  // Remember the candidate length of last searching result because we don't
-  // want to output all candidates at a time.
-  // Set it to 0 when we don't need the candidates buffer anymore.
-  _candidatesLength: 0,
-
-  _workerTimeout: 600000,
-
   _firstCandidate: '',
   _keypressQueue: [],
   _isWorking: false,
 
   _isActive: false,
-  _uninitTimer: null,
 
   // Current keyboard
   _keyboard: 'zh-Hans-Shouxie',
@@ -229,44 +210,7 @@ IMEngine.prototype = {
     
     clear: function() {
         this._strokePoints = [];
-        jsshouxie._render.clear();
-    },
-  },
-  
-  _render: {
-    _lastX: -1,
-    _lastY: -1,
-    _ctx: null,
-    _width: 280,
-    _height: 280,
-    
-    init: function(width, height) {
-      var canvas = IMERender.activeIme.querySelector('.handwriting');
-      this._ctx = canvas.getContext('2d');
-      this._ctx.strokeStyle = "#df4b26";
-      this._ctx.lineJoin = "round";
-      this._ctx.lineWidth = 5;
-      this._width = width;
-      this._height = height;
-    },
-    
-    clear: function() {
-      this._ctx.clearRect(0, 0, this._width, this._height);
-      this._lastX = this._lastY = -1;
-    },
-    
-    draw: function(x, y, start) {
-      this._ctx.beginPath();
-      if (start) {
-        this._lastX = x-1;
-        this._lastY = y;
-      }
-      this._ctx.moveTo(this._lastX, this._lastY);
-      this._ctx.lineTo(x, y);
-      this._ctx.closePath();
-      this._ctx.stroke();
-      this._lastX = x;
-      this._lastY = y;
+        Render.clear();
     },
   },
 
@@ -277,7 +221,7 @@ IMEngine.prototype = {
     };
     if (!this._isInited) {
       canvas.height = canvas.clientHeight;
-      this._render.init(canvas.width, canvas.height);
+      Render.init(canvas.width, canvas.height);
       this._isInited = true;
     }
     var canvasRect = canvas.getBoundingClientRect();
@@ -298,7 +242,7 @@ IMEngine.prototype = {
     var point = this._board.getMousePoint(event);
     this._board.addStrokePoint(point[0], point[1]);
     this._writing = true;
-    this._render.draw(point[0], point[1], true);
+    Render.draw(point[0], point[1], true);
   },
 
   canvasMouseMove: function engine_mousemove(event) {
@@ -308,7 +252,7 @@ IMEngine.prototype = {
     
     var point = this._board.getMousePoint(event);
     this._board.addStrokePoint(point[0], point[1]);
-    this._render.draw(point[0], point[1], false);
+    Render.draw(point[0], point[1], false);
   },
 
   canvasMouseUp: function engine_mouseup(event) {
@@ -363,14 +307,12 @@ IMEngine.prototype = {
 
     debug('key code: ' + code);
 
-    // Backspace - delete last input symbol if exists
+    // Backspace - delete last pending input if exists
     if (code === KeyEvent.DOM_VK_BACK_SPACE) {
       debug('Backspace key');
 
       if (this._firstCandidate) {
         debug('Remove candidates.');
-
-        // prevent updateCandidateList from making the same suggestions
         this.empty();
       } else {
         // pass the key to IMEManager for default action
@@ -383,14 +325,13 @@ IMEngine.prototype = {
     }
 
     // Select the first candidate if needed.
-    debug('Non-pinyin key is pressed or the input is too long.');
     var sendKey = true;
     if (this._firstCandidate) {
-      this._glue.endComposition(this._firstCandidate);
       // candidate list exists; output the first candidate
       debug('Sending first candidate.');
+      this._glue.endComposition(this._firstCandidate);
 
-      // no return here
+      // no return or space here
       console.log([code, KeyEvent.DOM_VK_SPACE]);
       if (code === KeyEvent.DOM_VK_RETURN ||
           code === KeyEvent.DOM_VK_SPACE) {
@@ -421,103 +362,16 @@ IMEngine.prototype = {
     this._isWorking = false;
   },
 
-  _accessUserDict: function engine_loadUserDict(action, param, callback) {
-    var indexedDB = window.indexedDB;
-
-    if (!indexedDB) {
-      callback(null);
-      return;
-    }
-
-    // Access user_dict.data from IndexedDB
-    var dbVersion = 1;
-    var STORE_NAME = 'files';
-    var USER_DICT = 'user_dict';
-
-    var request = indexedDB.open('EmpinyinDatabase', dbVersion);
-
-    request.onerror = function opendb_onerror(event) {
-      debug('Error occurs when openning database: ' + event.target.errorCode);
-      callback(null);
-    };
-
-    request.onsuccess = function opendb_onsuccess(event) {
-      var db = event.target.result;
-
-      if (action == 'load') {
-        var request = db.transaction([STORE_NAME], 'readonly')
-                        .objectStore(STORE_NAME).get(USER_DICT);
-
-        request.onsuccess = function readdb_oncomplete(event) {
-          db.close();
-          if (!event.target.result) {
-            callback(null);
-          } else {
-            callback(event.target.result.content);
-          }
-        };
-
-        request.onerror = function readdb_oncomplete(event) {
-          debug('Failed to read file from DB: ' + event.target.result.name);
-          db.close();
-          callback(null);
-        };
-      } else if (action == 'save') {
-        var obj = {
-          name: USER_DICT,
-          content: param
-        };
-
-        var request = db.transaction([STORE_NAME], 'readwrite')
-                        .objectStore(STORE_NAME).put(obj);
-
-        request.onsuccess = function readdb_oncomplete(event) {
-          db.close();
-          callback(true);
-        };
-
-        request.onerror = function readdb_oncomplete(event) {
-          debug('Failed to write file to DB: ' + event.target.result.name);
-          db.close();
-          callback(false);
-        };
-      }
-    };
-
-    request.onupgradeneeded = function opendb_onupgradeneeded(event) {
-      var db = event.target.result;
-
-      // Delete the old ObjectStore if present
-      if (db.objectStoreNames.length !== 0) {
-        db.deleteObjectStore(STORE_NAME);
-      }
-
-      db.createObjectStore(STORE_NAME, { keyPath: 'name' });
-    };
-  },
-
   /**
    * Override
    */
   init: function engine_init(glue) {
     IMEngineBase.prototype.init.call(this, glue);
     debug('init.');
-  },
-
-  /**
-   * Override
-   */
-  uninit: function engine_uninit() {
-    IMEngineBase.prototype.uninit.call(this);
-    debug('Uninit.');
-
-    if (this._uninitTimer) {
-      clearTimeout(this._uninitTimer);
-      this._uninitTimer = null;
-    }
-
-    this._resetKeypressQueue();
-    this.empty();
+    importScripts(['js/imes/jsshouxie/zinnia-engine.js',
+                   'js/imes/jsshouxie/emscripten_zinnia.js'], function() {
+      debug('loaded\n');
+    });
   },
 
   /**
@@ -591,11 +445,6 @@ IMEngine.prototype = {
   activate: function engine_activate(language, state, options) {
     IMEngineBase.prototype.activate.call(this, language, state, options);
 
-    if (this._uninitTimer) {
-      clearTimeout(this._uninitTimer);
-      this._uninitTimer = null;
-    }
-
     var inputType = state.type;
     debug('Activate. Input type: ' + inputType);
 
@@ -612,7 +461,7 @@ IMEngine.prototype = {
     if (!canvas) {
       return;
     };
-    this._render.init(canvas.width, canvas.height);
+    Render.init(canvas.width, canvas.height);
   },
 
   /**
@@ -631,27 +480,47 @@ IMEngine.prototype = {
     this.empty();
 
     var self = this;
-  },
-
-  getMoreCandidates: function engine_getMore(indicator, maxCount, callback) {
-    if (this._candidatesLength == 0) {
-      callback(null);
-      return;
-    }
-
-    var num = this._candidatesLength;
-    maxCount = Math.min((maxCount || num) + indicator, num);
-
-    var msgId = this._pendingSymbols ? 'im_get_candidates' : 'im_get_predicts';
-
   }
 };
 
-var jsshouxie = new IMEngine();
+var Render = {
+  _lastX: -1,
+  _lastY: -1,
+  _ctx: null,
+  _width: 280,
+  _height: 280,
 
-// Expose jsshouxie as an AMD module
-if (typeof define === 'function' && define.amd)
-  define('jsshouxie', [], function() { return jsshouxie; });
+  init: function(width, height) {
+    var canvas = IMERender.activeIme.querySelector('.handwriting');
+    this._ctx = canvas.getContext('2d');
+    this._ctx.strokeStyle = "#df4b26";
+    this._ctx.lineJoin = "round";
+    this._ctx.lineWidth = 5;
+    this._width = width;
+    this._height = height;
+  },
+
+  clear: function() {
+    this._ctx.clearRect(0, 0, this._width, this._height);
+    this._lastX = this._lastY = -1;
+  },
+
+  draw: function(x, y, start) {
+    this._ctx.beginPath();
+    if (start) {
+      this._lastX = x-1;
+      this._lastY = y;
+    }
+    this._ctx.moveTo(this._lastX, this._lastY);
+    this._ctx.lineTo(x, y);
+    this._ctx.closePath();
+    this._ctx.stroke();
+    this._lastX = x;
+    this._lastY = y;
+  },
+};
+
+var jsshouxie = new IMEngine();
 
 // Expose the engine to the Gaia keyboard
 if (typeof InputMethods !== 'undefined') {
