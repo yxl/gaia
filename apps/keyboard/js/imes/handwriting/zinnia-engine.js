@@ -38,7 +38,7 @@ var HWREngine = {
 };
 
 Module = {
-  filePackagePrefixURL: 'js/imes/jsshouxie/',
+  filePackagePrefixURL: 'js/imes/handwriting/',
   canvas: {},
   stdout: null,
   _main: function() {

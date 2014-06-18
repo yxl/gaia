@@ -1,9 +1,9 @@
-Keyboards['zh-Hans-Shouxie'] = {
-  label: 'Chinese - Simplified - Shouxie',
-  menuLabel: '手写',
+Keyboards['zh-Hans-Handwriting'] = {
+  label: 'Chinese - Simplified - Handwriting',
+  menuLabel: '手写简体',
   needsCandidatePanel: true,
   disableAlternateLayout: true,
-  imEngine: 'jsshouxie',
+  imEngine: 'handwriting',
   types: ['text'],
   width: 10,
   textLayoutOverwrite: {
@@ -32,7 +32,7 @@ Keyboards['zh-Hans-Shouxie'] = {
   ]
 };
 
-Keyboards['zh-Hans-Shouxie-Symbol-Ch-1'] = {
+Keyboards['zh-Hans-Handwriting-Symbol-Ch-1'] = {
   hidesSwitchKey: true,
   needsCandidatePanel: true,
   disableAlternateLayout: true,
@@ -68,7 +68,7 @@ Keyboards['zh-Hans-Shouxie-Symbol-Ch-1'] = {
   ]
 };
 
-Keyboards['zh-Hans-Shouxie-Symbol-Ch-2'] = {
+Keyboards['zh-Hans-Handwriting-Symbol-Ch-2'] = {
   hidesSwitchKey: true,
   needsCandidatePanel: true,
   disableAlternateLayout: true,
@@ -103,7 +103,7 @@ Keyboards['zh-Hans-Shouxie-Symbol-Ch-2'] = {
   ]
 };
 
-Keyboards['zh-Hans-Shouxie-Symbol-En-1'] = {
+Keyboards['zh-Hans-Handwriting-Symbol-En-1'] = {
   hidesSwitchKey: true,
   needsCandidatePanel: true,
   disableAlternateLayout: true,
@@ -138,7 +138,7 @@ Keyboards['zh-Hans-Shouxie-Symbol-En-1'] = {
   ]
 };
 
-Keyboards['zh-Hans-Shouxie-Symbol-En-2'] = {
+Keyboards['zh-Hans-Handwriting-Symbol-En-2'] = {
   hidesSwitchKey: true,
   needsCandidatePanel: true,
   disableAlternateLayout: true,

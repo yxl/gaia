@@ -121,14 +121,14 @@ IMEngine.prototype = {
   _isActive: false,
 
   // Current keyboard
-  _keyboard: 'zh-Hans-Shouxie',
+  _keyboard: 'zh-Hans-Handwriting',
 
   _timeOutId: null,
   _writing: false,
   _isInited: false,
 
   isInCanvas: function(event) {
-    var canvas = IMERender.activeIme.querySelector('.handwriting');
+    var canvas = IMERender.activeIme.querySelector('.handwriting-pad');
     if (!canvas) {
       return false;
     };
@@ -259,8 +259,8 @@ IMEngine.prototype = {
    */
   init: function engine_init(glue) {
     IMEngineBase.prototype.init.call(this, glue);
-    importScripts(['js/imes/jsshouxie/zinnia-engine.js',
-                   'js/imes/jsshouxie/emscripten_zinnia.js'], function() {
+    importScripts(['js/imes/handwriting/zinnia-engine.js',
+                   'js/imes/handwriting/emscripten_zinnia.js'], function() {
     });
   },
 
@@ -276,8 +276,8 @@ IMEngine.prototype = {
     IMEngineBase.prototype.click.call(this, keyCode);
 
     switch (keyCode) {
-      case -11: // Switch to Shouxie Panel
-        this._alterKeyboard('zh-Hans-Shouxie');
+      case -11: // Switch to handwriting Panel
+        this._alterKeyboard('zh-Hans-Handwriting');
         break;
       case -20: // Switch to Chinese Symbol Panel, Same page
       case -21: // Switch to Chinese Symbol Panel, Page 1
@@ -291,7 +291,7 @@ IMEngine.prototype = {
         if (!symbolPage)
           symbolPage = this._keyboard.substr(-1);
         this._alterKeyboard(
-          'zh-Hans-Shouxie-Symbol-' + symbolType + '-' + symbolPage);
+          'zh-Hans-Handwriting-Symbol-' + symbolType + '-' + symbolPage);
         break;
       default:
         this._keypressQueue.push(keyCode);
@@ -336,7 +336,7 @@ IMEngine.prototype = {
 
     var inputType = state.type;
 
-    var keyboard = 'zh-Hans-Shouxie';
+    var keyboard = 'zh-Hans-Handwriting';
     if (inputType == '' || inputType == 'text' || inputType == 'textarea') {
       keyboard = this._keyboard;
     }
@@ -345,7 +345,7 @@ IMEngine.prototype = {
 
     this._isActive = true;
 
-    var canvas = IMERender.activeIme.querySelector('.handwriting');
+    var canvas = IMERender.activeIme.querySelector('.handwriting-pad');
     if (!canvas) {
       return;
     };
@@ -378,7 +378,7 @@ var Render = {
   _height: 280,
 
   init: function(width, height) {
-    var canvas = IMERender.activeIme.querySelector('.handwriting');
+    var canvas = IMERender.activeIme.querySelector('.handwriting-pad');
     this._ctx = canvas.getContext('2d');
     this._ctx.strokeStyle = "#df4b26";
     this._ctx.lineJoin = "round";
@@ -418,7 +418,7 @@ var Board = {
   },
 
   getMousePoint: function(event) {
-    var canvas = IMERender.activeIme.querySelector('.handwriting');
+    var canvas = IMERender.activeIme.querySelector('.handwriting-pad');
     if (!canvas) {
       return [0, 0];
     }
@@ -433,10 +433,10 @@ var Board = {
       return;
     }
     var str = HWREngine.recognize(this._strokePoints);
-    if (jsshouxie._firstCandidate) {
-      jsshouxie.select(jsshouxie._firstCandidate, {});
+    if (handwriting._firstCandidate) {
+      handwriting.select(handwriting._firstCandidate, {});
     }
-    jsshouxie._sendCandidates(str);
+    handwriting._sendCandidates(str);
     Board.clear();
   },
 
@@ -446,10 +446,10 @@ var Board = {
   },
 };
 
-var jsshouxie = new IMEngine();
+var handwriting = new IMEngine();
 
 // Expose the engine to the Gaia keyboard
 if (typeof InputMethods !== 'undefined') {
-  InputMethods.jsshouxie = jsshouxie;
+  InputMethods.handwriting = handwriting;
 }
 })();
