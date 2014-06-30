@@ -19,15 +19,16 @@ Keyboards['zh-Hans-Pinyin'] = {
     ], [
       { value: 'a' }, { value: 's' }, { value: 'd' }, { value: 'f' },
       { value: 'g' } , { value: 'h' }, { value: 'j' }, { value: 'k' },
-      { value: 'l' }, { value: "'" }
+      { value: 'l' }
     ], [
-      { value: '，', ratio: 1.5 }, { value: 'z' },
+      { value: "'", ratio: 1.5 }, { value: 'z' },
       { value: 'x' }, { value: 'c' }, { value: 'v' }, { value: 'b' },
       { value: 'n' }, { value: 'm' },
       { value: '⌫', ratio: 1.5, keyCode: KeyEvent.DOM_VK_BACK_SPACE }
     ], [
-      { value: '?123', keyCode: -21, ratio: 1.5 },
-      { value: '空格', keyCode: KeyEvent.DOM_VK_SPACE, ratio: 5 },
+      { value: '12&', keyCode: -21, ratio: 1.5 },
+      { value: '，', ratio: 1},
+      { value: '空格', keyCode: KeyEvent.DOM_VK_SPACE, ratio: 4 },
       { value: '。', ratio: 1.5 },
       { value: '↵', ratio: 2, keyCode: KeyEvent.DOM_VK_RETURN }
     ]
