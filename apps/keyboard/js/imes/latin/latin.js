@@ -71,9 +71,10 @@
   var suggesting;         // Are we offering suggestions for this activation?
   var correcting;         // Are we auto-correcting user input?
   var punctuating;        // Are we offering punctuation assistance?
-  var inputText;          // The input text
+  var inputTextBeforeCursor; // The input text before cursor.
+  var inputTextAfterCursor;  // The input text after cursor.
   var cursor;             // The insertion position
-  var selection;          // The end of the selection, if there is one, or 0
+  var selection;          // The length of the selection, if there is one, or 0
   var lastSpaceTimestamp; // If the last key was a space, this is the timestamp
   var layoutParams;       // Parameters passed to setLayoutParams
   var nearbyKeyMap;       // Map keys to nearby keys
@@ -185,12 +186,10 @@
   // them.
   function activate(lang, state, options) {
     inputMode = getInputMode(state.type, state.inputmode);
-    inputText = state.value;
+    inputTextBeforeCursor = state.inputContext.textBeforeCursor;
+    inputTextAfterCursor = state.inputContext.textAfterCursor;
     cursor = state.selectionStart;
-    if (state.selectionEnd > state.selectionStart)
-      selection = state.selectionEnd;
-    else
-      selection = 0;
+    selection = state.selectionEnd - state.selectionStart;
 
     // Figure out what kind of input assistance we're providing for this
     // activation.
@@ -445,13 +444,11 @@
         if (selection) {
           // backspace while a region is selected erases the selection
           // and leaves the cursor at the selection start
-          inputText = inputText.substring(0, cursor) +
-            inputText.substring(selection);
+          inputTextAfterCursor = inputTextAfterCursor.substring(selection);
           selection = 0;
         } else if (cursor > 0) {
           cursor--;
-          inputText = inputText.substring(0, cursor) +
-            inputText.substring(cursor + 1);
+          inputTextBeforeCursor = inputTextBeforeCursor.slice(0, -1);
 
           // If we have temporarily disabled auto correction for the current
           // word and we've just backspaced over the entire word, then we can
@@ -460,17 +457,10 @@
             correctionDisabled = false;
         }
       } else {
+        inputTextBeforeCursor += String.fromCharCode(keycode);
         if (selection) {
-          inputText =
-            inputText.substring(0, cursor) +
-            String.fromCharCode(keycode) +
-            inputText.substring(selection);
+          inputTextAfterCursor = inputTextAfterCursor.substring(selection);
           selection = 0;
-        } else {
-          inputText =
-            inputText.substring(0, cursor) +
-            String.fromCharCode(keycode) +
-            inputText.substring(cursor);
         }
         cursor++;
       }
@@ -490,10 +480,8 @@
 
     return replPromise.then(function() {
       // Now update internal state
-      inputText =
-        inputText.substring(0, cursor - oldWordLen) +
-        newWord +
-        inputText.substring(cursor);
+      inputTextBeforeCursor = inputTextBeforeCursor.slice(0, -oldWordLen) +
+                              newWord;
       cursor += newWord.length - oldWordLen;
     });
   }
@@ -505,7 +493,7 @@
     // then revert it.
     var len = revertFrom ? revertFrom.length : 0;
     if (len && cursor >= len &&
-        inputText.substring(cursor - len, cursor) === revertFrom) {
+        inputTextBeforeCursor.slice(-len) === revertFrom) {
 
       // Revert the content of the text field
       return replaceBeforeCursor(revertFrom, revertTo).then(function() {
@@ -532,11 +520,11 @@
         wordBeforeCursor() !== autoCorrection) {
       return autoCorrect(keycode);
     }
-    else if (punctuating && cursor >= 2 &&
-             isWhiteSpace(inputText[cursor - 1]) &&
-             inputText[cursor - 1].charCodeAt(0) !== KeyEvent.DOM_VK_RETURN &&
-             !WORDSEP.test(inputText[cursor - 2]))
-    {
+    var charBeforeCursor = inputTextBeforeCursor.slice(-1);
+    if (punctuating && cursor >= 2 &&
+        isWhiteSpace(charBeforeCursor) &&
+        charBeforeCursor.charCodeAt(0) !== KeyEvent.DOM_VK_RETURN &&
+        !WORDSEP.test(inputTextBeforeCursor.slice(-2, -1))) {
       return autoPunctuate(keycode);
     }
     else {
@@ -608,9 +596,7 @@
         })
         .then(function() {
           var newtext = String.fromCharCode(keycode) + ' ';
-          inputText = inputText.substring(0, cursor - 1) +
-            newtext +
-            inputText.substring(cursor);
+          inputTextBeforeCursor = inputTextBeforeCursor.slice(-1) + newtext;
           cursor++;
 
           // Remember this change so we can revert it on backspace
@@ -906,10 +892,10 @@
       keyboard.setUpperCase(true);
     }
     else if (cursor >= 2 &&
-             isUpperCase(inputText.substring(cursor - 2, cursor))) {
+             isUpperCase(inputTextBeforeCursor.slice(-2))) {
       keyboard.setUpperCase(true);
     }
-    else if (!isWhiteSpace(inputText.substring(cursor - 1, cursor))) {
+    else if (!isWhiteSpace(inputTextBeforeCursor.slice(-1))) {
       keyboard.setUpperCase(false);
     }
     else if (atSentenceStart()) {
@@ -947,7 +933,7 @@
     // If we're not at the end of the line and the character after the
     // cursor is not whitespace, don't offer a suggestion
     // Note that we purposely use WS here, not WORDSEP.
-    if (cursor < inputText.length && !WS.test(inputText[cursor]))
+    if (inputTextAfterCursor.length > 0 && !WS.test(inputTextAfterCursor[0]))
       return false;
 
     // If the cursor is at position 0 then we're not at the end of a word
@@ -956,41 +942,41 @@
 
     // We're at the end of a word if the character before the cursor is
     // not a word separator character
-    var c = inputText[cursor - 1];
+    var c = inputTextBeforeCursor.slice(-1);
     return !WORDSEP.test(c);
   }
 
   // Get the word before the cursor. Assumes that atWordEnd() is true
   function wordBeforeCursor() {
-    for (var firstletter = cursor - 1; firstletter >= 0; firstletter--) {
-      if (WORDSEP.test(inputText[firstletter])) {
+    var firstletter = inputTextBeforeCursor.length - 1;
+    for (; firstletter >= 0; firstletter--) {
+      if (WORDSEP.test(inputTextBeforeCursor[firstletter])) {
         break;
       }
     }
     firstletter++;
 
-    // firstletter is now the position of the start of the word and cursor is
-    // the end of the word
-    return inputText.substring(firstletter, cursor);
+    // firstletter is now the position of the start of the word.
+    return inputTextBeforeCursor.substring(firstletter);
   }
 
   function atSentenceStart() {
-    var i = cursor - 1;
+    var i = inputTextBeforeCursor.length - 1;
 
     if (i === -1)    // This is the empty string case
       return true;
 
     // Verify that the position before the cursor is whitespace
-    if (!isWhiteSpace(inputText[i--]))
+    if (!isWhiteSpace(inputTextBeforeCursor[i--]))
       return false;
     // Now skip any additional whitespace before that
-    while (i >= 0 && isWhiteSpace(inputText[i]))
+    while (i >= 0 && isWhiteSpace(inputTextBeforeCursor[i]))
       i--;
 
     if (i < 0)     // whitespace all the way back to the end of the string
       return true;
 
-    var c = inputText[i];
+    var c = inputTextBeforeCursor[i];
     return c === '.' || c === '?' || c === '!';
   }
 
@@ -1006,14 +992,10 @@
         return;
       }
 
-      var newText = evt.target.textBeforeCursor + evt.target.textAfterCursor;
-      inputText = newText;
+      inputTextBeforeCursor = evt.target.textBeforeCursor;
+      inputTextAfterCursor = evt.target.textAfterCursor;
       cursor = evt.target.selectionStart;
-      if (evt.target.selectionEnd > evt.target.selectionStart) {
-        selection = evt.target.selectionEnd;
-      } else {
-        selection = 0;
-      }
+      selection = evt.target.selectionEnd - evt.target.selectionStart;
 
       updateSuggestions();
       break;
