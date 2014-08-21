@@ -121,7 +121,7 @@ if (!ENVIRONMENT_IS_WORKER && !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !EN
 function globalEval(x) {
   eval.call(null, x);
 }
-if (!Module['load'] && Module['read']) {
+if (!Module['load'] == 'undefined' && Module['read']) {
   Module['load'] = function(f) {
     globalEval(Module['read'](f));
   };
