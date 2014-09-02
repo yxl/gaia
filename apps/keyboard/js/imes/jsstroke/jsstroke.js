@@ -1,9 +1,10 @@
 'use strict';
 
 var strokeSearchSingle;
-var strokeSearchInit;
 var assocSearchSingle;
-var assocSearchInit;
+var keywordHeap;
+var assocRetHeap;
+var charRetHeap;
 
 var Module = {
 
@@ -14,64 +15,51 @@ var Module = {
   canvas: {},
 
   _main: function(){
-    assocSearchInit=
-      Module.cwrap('assocSearchInit','',[]);
     assocSearchSingle=
       Module.cwrap('assocSearchSearch','number',
       ['number','number','number']);
-    strokeSearchInit=
-      Module.cwrap('strokeSearchInit','',[]);
     strokeSearchSingle=
       Module.cwrap('strokeSearchSearch','number',
       ['string','number','number']);
-    assocSearchInit();
-    strokeSearchInit();
+    Module.ccall('assocSearchInit','',[],[]);
+    Module.ccall('strokeSearchInit','',[],[]);
+
+    var asnDataBytes = 100 * 6 * 2;
+    var kwnDataBytes = 6 * 2;
+    var chnDataBytes = 100 *  2;
+    var asdataPtr = Module._malloc(asnDataBytes);
+    var kwdataPtr = Module._malloc(kwnDataBytes);
+    var chdataPtr = Module._malloc(chnDataBytes);
+    assocRetHeap = new Uint16Array(this.HEAPU16.buffer,
+      asdataPtr, asnDataBytes/2);
+    keywordHeap = new Uint16Array(this.HEAPU16.buffer,
+      kwdataPtr, kwnDataBytes/2);
+    charRetHeap = new Uint16Array(this.HEAPU16.buffer,
+      chdataPtr, chnDataBytes/2);
+
     Module._isReady = true;
-    console.log('engine is ready');
   },
 
   assocGetResults: function (keywords, limit) {
-
-    // Create example data to test float_multiply_array
-    var data = new Uint16Array(limit*6);
-    var kwdata = new Uint16Array(6);
-    for (var id = 0; id<keywords.length;id++){
-      kwdata[id] = keywords.charCodeAt(id);
+    var id = 0;
+    for (id = 0; id<assocRetHeap.length;id++){
+      assocRetHeap[id] = 0;
     }
-    for (var id=keywords.length; id<6; id++){
-      kwdata[id] = '\0';
+    for (id = 0; id<keywords.length;id++){
+      keywordHeap[id] = keywords.charCodeAt(id);
     }
-
-    // Get data byte size, allocate memory on Emscripten heap, and get pointer
-    var nDataBytes = data.length * data.BYTES_PER_ELEMENT;
-    var dataPtr = Module._malloc(nDataBytes);
-    var kwnDataBytes = kwdata.length * kwdata.BYTES_PER_ELEMENT;
-    var kwdataPtr = Module._malloc(kwnDataBytes);
-
-    // Copy data to Emscripten heap (directly accessed from Module.HEAPU8)
-    var dataHeap =
-      new Uint16Array(this.HEAPU16.buffer, dataPtr, nDataBytes);
-    dataHeap.set(new Uint16Array(data.buffer));
-    var kwdataHeap =
-      new Uint16Array(this.HEAPU16.buffer, kwdataPtr, kwnDataBytes);
-    kwdataHeap.set(new Uint16Array(kwdata.buffer));
-
-    // Call function and get result
-    assocSearchSingle(kwdataHeap.byteOffset,limit,dataHeap.byteOffset);
-    var result =
-      new Uint16Array(dataHeap.buffer, dataHeap.byteOffset, data.length);
-
-    // Free memory
-    Module._free(dataHeap.byteOffset);
-    Module._free(kwdataHeap.byteOffset);
+    for (id=keywords.length; id<6; id++){
+      keywordHeap[id] = '\0';
+    }
+    assocSearchSingle(keywordHeap.byteOffset,limit,assocRetHeap.byteOffset);
 
     var phraseResult = [];
     var phraseId = 0;
-    while (result[phraseId*6]) {
+    while (assocRetHeap[phraseId*6]) {
       var charResult = '';
       var charId = phraseId*6;
-      while(result[charId]){
-        charResult += String.fromCharCode(result[charId]);
+      while(assocRetHeap[charId]){
+        charResult += String.fromCharCode(assocRetHeap[charId]);
         ++charId;
       }
       phraseResult.push(charResult);
@@ -81,37 +69,18 @@ var Module = {
   },
 
   strokeGetResults: function (strokes, limit) {
-
-    // Create example data to test float_multiply_array
-    var data = new Uint16Array(limit);
-
-    // Get data byte size, allocate memory on Emscripten heap, and get pointer
-    var nDataBytes = data.length * data.BYTES_PER_ELEMENT;
-    var dataPtr = Module._malloc(nDataBytes);
-
-    // Copy data to Emscripten heap (directly accessed from Module.HEAPU8)
-    var dataHeap =
-      new Uint16Array(this.HEAPU16.buffer, dataPtr, nDataBytes);
-    dataHeap.set(new Uint16Array(data.buffer));
-
-    // Call function and get result
-    strokeSearchSingle(strokes,limit,dataHeap.byteOffset);
-    var result =
-      new Uint16Array(dataHeap.buffer, dataHeap.byteOffset, data.length);
-
-    // Free memory
-    Module._free(dataHeap.byteOffset);
+    for (var id = 0; id<charRetHeap.length;id++){
+      charRetHeap[id] = 0;
+    }
+    strokeSearchSingle(strokes,limit,charRetHeap.byteOffset);
 
     var charResult = [];
-    var id = 0;
+    id = 0;
     //If id excesses range, the result will be undefined.
-    while(result[id]){
-      charResult.push(String.fromCharCode(result[id]));
+    while(charRetHeap[id]){
+      charResult.push(String.fromCharCode(charRetHeap[id]));
       ++id;
     }
-    console.log("character result length:"+charResult.length);
-    console.log(charResult[0]);
-    console.log("stroke result length:"+result.length);
     return charResult;
   },
 };
@@ -288,16 +257,14 @@ IMEngine.prototype = {
    */
   _sendCandidates: function engine_sendCandidates(candidates) {
     var list = [];
-    console.log("sendCandidates candidates:"+candidates[0]+candidates.length);
     var len = candidates.length;
     for (var id = 0; id < len; id++) {
       var cand = candidates[id];
-      if (id == 0) {
+      if (id === 0) {
         this._firstCandidate = cand;
       }
       list.push([cand, id]);
     }
-    console.log("sendCandidates list:"+list[0]+list.length);
     this._glue.sendCandidates(list);
   },
 
@@ -307,7 +274,6 @@ IMEngine.prototype = {
     }
     this._isWorking = true;
     this._next();
-    console.log('started');
   },
 
   _next: function engine_next() {
@@ -319,11 +285,10 @@ IMEngine.prototype = {
 
     var code = this._keypressQueue.shift();
 
-    console.log('inputcode:'+code);
     // Code 333 is a special keycode for the all-match key.
     var realCode =  (code == 333) ? 63 : code;
 
-    if (code == 0) {
+    if (code === 0) {
       // This is a select function operation.
       this._updateCandidatesAndSymbols(this._next.bind(this));
       return;
@@ -377,7 +342,9 @@ IMEngine.prototype = {
     this._updateCandidatesAndSymbols(this._next.bind(this));
   },
 
-  //stroke keys: h,s,p,n,z, and the code for vague search
+  // stroke keys: h,s,p,n,z, and the code for vague search
+  // Code values: 333 - all-match key, 104 - 'h', 110 - 'n'
+  // 112 - 'p', 115 - 's', 122 - 'z'
   _isStrokeKey :function engine_isStrokeKey(code) {
     if( code===333 || code === 104 ||code ===110 ||
       code===112 || code === 115 ||code ===122) {
@@ -389,14 +356,12 @@ IMEngine.prototype = {
   _appendNewSymbol: function engine_appendNewSymbol(code) {
     var symbol = String.fromCharCode(code);
     this._pendingSymbols += symbol;
-    console.log('appendsymbol:'+symbol);
   },
 
   _updateCandidatesAndSymbols:function engine_updateCandsAndSymbols(callback) {
     var self = this;
     this._updateCandidateList(function() {
       self._sendPendingSymbols();
-      console.log('updatecandssymbols');
       callback();
     });
   },
@@ -408,6 +373,7 @@ IMEngine.prototype = {
       this._glue.getNumberOfCandidatesPerRow() : Number.Infinity;
 
     this._candidatesLength = 0;
+    var num = 0;
 
     if (!this._pendingSymbols) {
       // If there is no pending symbols, make prediction with the previous
@@ -415,16 +381,14 @@ IMEngine.prototype = {
 
       if(this._historyText){
         var predicts = Module.assocGetResults(this._historyText,50);
-        var num = predicts.length;
+        num = predicts.length;
         if (num > numberOfCandidatesPerRow + 1){
           self._candidatesLength = num;
         }
-        console.log("updatecandidatelist:"+ predicts[0]+predicts.length);
         self._sendCandidates(predicts);
         callback();
 
       } else {
-        console.log("no historytext.");
         this._sendCandidates([]);
         callback();
       }
@@ -433,7 +397,7 @@ IMEngine.prototype = {
       // Update the candidates list by the pending pinyin string.
       this._historyText = '';
       var candidates = Module.strokeGetResults(this._pendingSymbols,50);
-      var num = candidates.length;
+      num = candidates.length;
       if (num > numberOfCandidatesPerRow + 1){
         self._candidatesLength = num;
       }
@@ -458,11 +422,10 @@ IMEngine.prototype = {
    */
   init: function engine_init(glue) {
     IMEngineBase.prototype.init.call(this, glue);
-    var script = document.createElement("script");
-    script.type = "text/javascript";
-    script.src = "js/imes/jsstroke/engine_c.js";
+    var script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = 'js/imes/jsstroke/engine_c.js';
     document.body.appendChild(script);
-    console.log('Stroke engine initialized');
   },
 
   /**
@@ -523,7 +486,6 @@ IMEngine.prototype = {
       self._start();
     };
 
-    console.log("select: pendingsymbols"+this._pendingSymbols);
     nextStep(text);
   },
 
@@ -537,7 +499,6 @@ IMEngine.prototype = {
     this._firstCandidate = '';
     this._sendPendingSymbols();
     this._sendCandidates([]);
-    console.log('working area emptied');
   },
 
   /**
@@ -548,34 +509,15 @@ IMEngine.prototype = {
     var self = this;
     self._start();
     this._isActive = true;
-    console.log('engine activated');
-  },
-
-  /**
-   * Override
-   */
-  deactivate: function engine_deactivate() {
-    IMEngineBase.prototype.deactivate.call(this);
-
-    if (!this._isActive){
-      return;
-    }
-
-    this._isActive = false;
-    this._resetKeypressQueue();
-    this.empty();
-    console.log('engine deactivated');
   },
 
   getMoreCandidates: function engine_getMore(indicator, maxCount, callback) {
-    if (this._candidatesLength == 0) {
-    console.log('getMoreCandidates:nocandidates');
+    if (this._candidatesLength === 0) {
       callback(null);
       return;
     }
     var num = this._candidatesLength;
     maxCount = Math.min((maxCount || num) + indicator, num);
-    console.log('getMoreCandidates:indicator:'+indicator);
     var totalResNum = 50;
     var results = this._pendingSymbols ?
       Module.strokeGetResults(this._pendingSymbols,totalResNum):
