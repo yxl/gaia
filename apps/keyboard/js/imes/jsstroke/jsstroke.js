@@ -1,3 +1,6 @@
+/* global define,
+  InputMethods */
+
 'use strict';
 
 var strokeSearchSingle;
@@ -89,12 +92,10 @@ var Module = {
 (function () {
 
 /* for non-Mozilla browsers */
-if (!KeyEvent) {
-  var KeyEvent = {
-    DOM_VK_BACK_SPACE: 0x8,
-    DOM_VK_RETURN: 0xd
-  };
-}
+var KeyEvent = window.KeyEvent || {
+  DOM_VK_BACK_SPACE: 0x8,
+  DOM_VK_RETURN: 0xd
+};
 
 var IMEngineBase = function engineBase_constructor() {
   this._glue = {};
@@ -394,7 +395,7 @@ IMEngine.prototype = {
       }
 
     } else {
-      // Update the candidates list by the pending pinyin string.
+      // Update the candidates list by the pending stroke string.
       this._historyText = '';
       var candidates = Module.strokeGetResults(this._pendingSymbols,50);
       num = candidates.length;
