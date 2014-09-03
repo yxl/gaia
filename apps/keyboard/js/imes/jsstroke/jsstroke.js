@@ -3,66 +3,76 @@
 
 'use strict';
 
-var strokeSearchSingle;
-var assocSearchSingle;
-var keywordHeap;
-var assocRetHeap;
-var charRetHeap;
-
 var Module = {
 
   _isReady: false,
 
-  filePackagePrefixURL:'js/imes/jsstroke/',
+  filePackagePrefixURL: 'js/imes/jsstroke/',
 
   canvas: {},
 
-  _main: function(){
-    assocSearchSingle=
-      Module.cwrap('assocSearchSearch','number',
-      ['number','number','number']);
-    strokeSearchSingle=
-      Module.cwrap('strokeSearchSearch','number',
-      ['string','number','number']);
-    Module.ccall('assocSearchInit','',[],[]);
-    Module.ccall('strokeSearchInit','',[],[]);
+  strokeSearchSingle: {},
+
+  assocSearchSingle: {},
+
+  keywordHeap: {},
+
+  assocRetHeap: {},
+
+  charRetHeap: {},
+
+  _main: function () {
+    Module.assocSearchSingle =
+      Module.cwrap('assocSearchSearch', 'number',
+      ['number', 'number', 'number']);
+    Module.strokeSearchSingle =
+      Module.cwrap('strokeSearchSearch', 'number',
+      ['string', 'number', 'number']);
+    var assocInit = Module.ccall('assocSearchInit', 'number', [], []);
+    var strokeInit = Module.ccall('strokeSearchInit', 'number', [], []);
+    if (assocInit == -1 || strokeInit == -1) {
+      Module._isReady = false;
+      console.log('Error: Failed to load dictionary file.');
+      return;
+    }
 
     var asnDataBytes = 100 * 6 * 2;
     var kwnDataBytes = 6 * 2;
-    var chnDataBytes = 100 *  2;
+    var chnDataBytes = 100 * 2;
     var asdataPtr = Module._malloc(asnDataBytes);
     var kwdataPtr = Module._malloc(kwnDataBytes);
     var chdataPtr = Module._malloc(chnDataBytes);
-    assocRetHeap = new Uint16Array(this.HEAPU16.buffer,
-      asdataPtr, asnDataBytes/2);
-    keywordHeap = new Uint16Array(this.HEAPU16.buffer,
-      kwdataPtr, kwnDataBytes/2);
-    charRetHeap = new Uint16Array(this.HEAPU16.buffer,
-      chdataPtr, chnDataBytes/2);
+    Module.assocRetHeap = new Uint16Array(
+      this.HEAPU16.buffer, asdataPtr, asnDataBytes / 2);
+    Module.keywordHeap = new Uint16Array(
+      this.HEAPU16.buffer, kwdataPtr, kwnDataBytes / 2);
+    Module.charRetHeap = new Uint16Array(
+      this.HEAPU16.buffer, chdataPtr, chnDataBytes / 2);
 
     Module._isReady = true;
   },
 
-  assocGetResults: function (keywords, limit) {
+  assocGetResults: function(keywords, limit) {
     var id = 0;
-    for (id = 0; id<assocRetHeap.length;id++){
-      assocRetHeap[id] = 0;
+    for (id = 0; id<Module.assocRetHeap.length; id++) {
+      Module.assocRetHeap[id] = 0;
     }
-    for (id = 0; id<keywords.length;id++){
-      keywordHeap[id] = keywords.charCodeAt(id);
+    for (id = 0; id<keywords.length; id++) {
+      Module.keywordHeap[id] = keywords.charCodeAt(id);
     }
-    for (id=keywords.length; id<6; id++){
-      keywordHeap[id] = '\0';
+    for (id=keywords.length; id < 6; id++) {
+      Module.keywordHeap[id] = '\0';
     }
-    assocSearchSingle(keywordHeap.byteOffset,limit,assocRetHeap.byteOffset);
+    Module.assocSearchSingle(Module.keywordHeap.byteOffset,
+      limit, Module.assocRetHeap.byteOffset);
 
     var phraseResult = [];
     var phraseId = 0;
-    while (assocRetHeap[phraseId*6]) {
+    while (Module.assocRetHeap[phraseId * 6]) {
       var charResult = '';
-      var charId = phraseId*6;
-      while(assocRetHeap[charId]){
-        charResult += String.fromCharCode(assocRetHeap[charId]);
+      var charId = phraseId * 6;
+      while (Module.assocRetHeap[charId]) {
+        charResult += String.fromCharCode(Module.assocRetHeap[charId]);
         ++charId;
       }
       phraseResult.push(charResult);
@@ -71,21 +81,22 @@ var Module = {
     return phraseResult;
   },
 
-  strokeGetResults: function (strokes, limit) {
-    for (var id = 0; id<charRetHeap.length;id++){
-      charRetHeap[id] = 0;
+  strokeGetResults: function(strokes, limit) {
+    for (var id = 0; id<Module.charRetHeap.length; id++) {
+      Module.charRetHeap[id] = 0;
     }
-    strokeSearchSingle(strokes,limit,charRetHeap.byteOffset);
+    Module.strokeSearchSingle(strokes,
+      limit, Module.charRetHeap.byteOffset);
 
     var charResult = [];
     id = 0;
     //If id excesses range, the result will be undefined.
-    while(charRetHeap[id]){
-      charResult.push(String.fromCharCode(charRetHeap[id]));
+    while (Module.charRetHeap[id]) {
+      charResult.push(String.fromCharCode(Module.charRetHeap[id]));
       ++id;
     }
     return charResult;
-  },
+  }
 };
   
   
@@ -223,26 +234,28 @@ IMEngine.prototype = {
       var self = this;
       var symbols = '';
       var len = this._pendingSymbols.length;
-      for (var id = 0; id< len; id++){
-        switch(this._pendingSymbols[id]){
-        case 'h':
-          symbols += '㇐';
-          break;
-        case 's':
-          symbols += '㇑';
-          break;
-        case 'p':
-          symbols += '㇓';
-          break;
-        case 'n':
-          symbols += '㇔';
-          break;
-        case 'z':
-          symbols += '㇜';
-          break;
-        case '?':
-          symbols += '*';
-          break;
+      for (var id = 0; id < len; id++) {
+        switch (this._pendingSymbols[id]) {
+          case 'h':
+            symbols += '㇐';
+            break;
+          case 's':
+            symbols += '㇑';
+            break;
+          case 'p':
+            symbols += '㇓';
+            break;
+          case 'n':
+            symbols += '㇔';
+            break;
+          case 'z':
+            symbols += '㇜';
+            break;
+          case '?':
+            symbols += '*';
+            break;
+          default:
+            break;
         }
       }
       self._glue.setComposition(symbols);
@@ -270,7 +283,7 @@ IMEngine.prototype = {
   },
 
   _start: function engine_start() {
-    if (this._isWorking){
+    if (this._isWorking) {
       return;
     }
     this._isWorking = true;
@@ -279,6 +292,7 @@ IMEngine.prototype = {
 
   _next: function engine_next() {
 
+    // If there key queue is empty, stop sending codes and candidates.
     if (!this._keypressQueue.length) {
       this._isWorking = false;
       return;
@@ -287,7 +301,7 @@ IMEngine.prototype = {
     var code = this._keypressQueue.shift();
 
     // Code 333 is a special keycode for the all-match key.
-    var realCode =  (code == 333) ? 63 : code;
+    var realCode = (code == 333) ? 63 : code;
 
     if (code === 0) {
       // This is a select function operation.
@@ -343,12 +357,12 @@ IMEngine.prototype = {
     this._updateCandidatesAndSymbols(this._next.bind(this));
   },
 
-  // stroke keys: h,s,p,n,z, and the code for vague search
-  // Code values: 333 - all-match key, 104 - 'h', 110 - 'n'
-  // 112 - 'p', 115 - 's', 122 - 'z'
-  _isStrokeKey :function engine_isStrokeKey(code) {
-    if( code===333 || code === 104 ||code ===110 ||
-      code===112 || code === 115 ||code ===122) {
+  // stroke keys: h, s, p, n, z, and the code for vague search
+  // Code values: 333 - all-match key, 104 - 'h', 110 - 'n',
+  // 112 - 'p', 115 - 's', 122 - 'z'.
+  _isStrokeKey: function engine_isStrokeKey(code) {
+    if(code === 333 || code === 104 || code === 110 ||
+      code === 112 || code === 115 || code === 122) {
       return true;
     }
     return false;
@@ -359,9 +373,10 @@ IMEngine.prototype = {
     this._pendingSymbols += symbol;
   },
 
-  _updateCandidatesAndSymbols:function engine_updateCandsAndSymbols(callback) {
+  _updateCandidatesAndSymbols:
+    function engine_updateCandsAndSymbols(callback) {
     var self = this;
-    this._updateCandidateList(function() {
+    this._updateCandidateList(function () {
       self._sendPendingSymbols();
       callback();
     });
@@ -381,7 +396,7 @@ IMEngine.prototype = {
       // select words.
 
       if(this._historyText){
-        var predicts = Module.assocGetResults(this._historyText,50);
+        var predicts = Module.assocGetResults(this._historyText, 50);
         num = predicts.length;
         if (num > numberOfCandidatesPerRow + 1){
           self._candidatesLength = num;
@@ -397,7 +412,7 @@ IMEngine.prototype = {
     } else {
       // Update the candidates list by the pending stroke string.
       this._historyText = '';
-      var candidates = Module.strokeGetResults(this._pendingSymbols,50);
+      var candidates = Module.strokeGetResults(this._pendingSymbols, 50);
       num = candidates.length;
       if (num > numberOfCandidatesPerRow + 1){
         self._candidatesLength = num;
@@ -450,11 +465,12 @@ IMEngine.prototype = {
     if (Module._isReady) {
       switch (keyCode) {
         case -31: // Switch to English Symbol Panel, Page 1
-        case -32: // Switch to English Symbol Panel, Page 2
-          var index = Math.abs(keyCode);
-          var symbolPage = index % 10;
           this._alterKeyboard(
-          'zh-Hans-Stroke-Symbol-En-' + symbolPage);
+          'zh-Hans-Stroke-Symbol-En-1');
+          break;
+        case -32: // Switch to English Symbol Panel, Page 2
+          this._alterKeyboard(
+          'zh-Hans-Stroke-Symbol-En-2');
           break;
         default:
           this._keypressQueue.push(keyCode);
@@ -521,12 +537,12 @@ IMEngine.prototype = {
     maxCount = Math.min((maxCount || num) + indicator, num);
     var totalResNum = 50;
     var results = this._pendingSymbols ?
-      Module.strokeGetResults(this._pendingSymbols,totalResNum):
-      Module.assocGetResults(this._historyText,totalResNum);
+      Module.strokeGetResults(this._pendingSymbols, totalResNum):
+      Module.assocGetResults(this._historyText, totalResNum);
     var len = results.length;
     var list = [];
     for (var i = indicator; i < len; i++) {
-      list.push([results[i], i+indicator]);
+      list.push([results[i], i + indicator]);
     }
     callback(list);
   }
@@ -537,7 +553,7 @@ var jsstroke = new IMEngine();
 
 // Expose jspinyin as an AMD module
 if (typeof define === 'function' && define.amd) {
-  define('jsstroke', [], function() { return jsstroke; });
+  define('jsstroke', [], function () { return jsstroke; });
 }
 
 // Expose the engine to the Gaia keyboard
