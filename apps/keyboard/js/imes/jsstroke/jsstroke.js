@@ -1,5 +1,4 @@
-/* global define,
-  InputMethods */
+/* global InputMethods */
 
 'use strict';
 
@@ -38,7 +37,7 @@ var Module = {
 
     var asnDataBytes = 100 * 6 * 2;
     var kwnDataBytes = 6 * 2;
-    var chnDataBytes = 100 * 2;
+    var chnDataBytes = 200 * 2;
     var asdataPtr = Module._malloc(asnDataBytes);
     var kwdataPtr = Module._malloc(kwnDataBytes);
     var chdataPtr = Module._malloc(chnDataBytes);
@@ -227,7 +226,6 @@ IMEngine.prototype = {
   _keypressQueue: [],
   _isWorking: false,
   _isActive: false,
-  _uninitTimer: null,
 
   _sendPendingSymbols: function engine_sendPendingSymbols() {
     if (this._pendingSymbols) {
@@ -412,7 +410,7 @@ IMEngine.prototype = {
     } else {
       // Update the candidates list by the pending stroke string.
       this._historyText = '';
-      var candidates = Module.strokeGetResults(this._pendingSymbols, 50);
+      var candidates = Module.strokeGetResults(this._pendingSymbols, 100);
       num = candidates.length;
       if (num > numberOfCandidatesPerRow + 1){
         self._candidatesLength = num;
@@ -449,10 +447,6 @@ IMEngine.prototype = {
    */
   uninit: function engine_uninit() {
     IMEngineBase.prototype.uninit.call(this);
-    if (this._uninitTimer) {
-      clearTimeout(this._uninitTimer);
-      this._uninitTimer = null;
-    }
     this._resetKeypressQueue();
     this.empty();
   },
@@ -466,11 +460,11 @@ IMEngine.prototype = {
       switch (keyCode) {
         case -31: // Switch to English Symbol Panel, Page 1
           this._alterKeyboard(
-          'zh-Hans-Stroke-Symbol-En-1');
+            'zh-Hans-Stroke-Symbol-En-1');
           break;
         case -32: // Switch to English Symbol Panel, Page 2
           this._alterKeyboard(
-          'zh-Hans-Stroke-Symbol-En-2');
+            'zh-Hans-Stroke-Symbol-En-2');
           break;
         default:
           this._keypressQueue.push(keyCode);
@@ -528,6 +522,9 @@ IMEngine.prototype = {
     this._isActive = true;
   },
 
+  /**
+   * Override
+   */
   getMoreCandidates: function engine_getMore(indicator, maxCount, callback) {
     if (this._candidatesLength === 0) {
       callback(null);
@@ -550,11 +547,6 @@ IMEngine.prototype = {
 };
 
 var jsstroke = new IMEngine();
-
-// Expose jspinyin as an AMD module
-if (typeof define === 'function' && define.amd) {
-  define('jsstroke', [], function () { return jsstroke; });
-}
 
 // Expose the engine to the Gaia keyboard
 if (typeof InputMethods !== 'undefined') {
