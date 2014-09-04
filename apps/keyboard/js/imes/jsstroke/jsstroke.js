@@ -39,21 +39,21 @@ var Module = {
     // Maximum length for associative search result is 100
     // Maximum characters in a phrase is 6
     // Maximum length for stroke search result is 200
-    var asnDataBytes = 100 * 6 * 2;
-    var kwnDataBytes = 6 * 2;
-    var chnDataBytes = 200 * 2;
-    var asdataPtr = Module._malloc(asnDataBytes);
-    var kwdataPtr = Module._malloc(kwnDataBytes);
-    var chdataPtr = Module._malloc(chnDataBytes);
+    var assocRetDataBytes = 100 * 6 * 2;
+    var keywordDataBytes = 6 * 2;
+    var strokeRetDataBytes = 200 * 2;
+    var assocRetDataPtr = Module._malloc(assocRetDataBytes);
+    var keywordDataPtr = Module._malloc(keywordDataBytes);
+    var strokeRetDataPtr = Module._malloc(strokeRetDataBytes);
     // Array for associative search result.
     Module.assocRetHeap = new Uint16Array(
-      this.HEAPU16.buffer, asdataPtr, asnDataBytes / 2);
+      this.HEAPU16.buffer, assocRetDataPtr, assocRetDataBytes / 2);
     // Array for associative search keyword.
     Module.keywordHeap = new Uint16Array(
-      this.HEAPU16.buffer, kwdataPtr, kwnDataBytes / 2);
+      this.HEAPU16.buffer, keywordDataPtr, keywordDataBytes / 2);
     // Array for stroke search result.
     Module.charRetHeap = new Uint16Array(
-      this.HEAPU16.buffer, chdataPtr, chnDataBytes / 2);
+      this.HEAPU16.buffer, strokeRetDataPtr, strokeRetDataBytes / 2);
 
     Module._isReady = true;
   },
