@@ -5,7 +5,7 @@ Keyboards['zh-Hans-Stroke'] = {
   needsCandidatePanel: true,
   disableAlternateLayout: true, // Hide "12&"
   hidesSwitchKey: true,
-  basicLayoutKey: '㇐㇑㇓',
+  basicLayoutKey: '一丨丿',
   imEngine: 'jsstroke',
   types: ['text', 'url', 'email', 'number'],
   width: 12,
@@ -19,19 +19,19 @@ Keyboards['zh-Hans-Stroke'] = {
   },
   keys: [
     [
-      { value:'㇐', keyCode: 104, ratio: 4 },
-      { value:'㇑', keyCode: 115, ratio: 4 },
-      { value:'㇓', keyCode: 112, ratio: 4 }
-    ],[
-      { value:'㇔', keyCode: 110, ratio: 4 },
-      { value:'㇜', keyCode: 122, ratio: 4 },
-      { value:'通', keyCode: 333, ratio: 4 }
-    ],[
-      { value:'12&', keyCode:-2, ratio: 4 },
-      { value:'。',className: 'alternate-indicator', ratio: 4 },
+      { value: '一', keyCode: 104, ratio: 4 },
+      { value: '丨', keyCode: 115, ratio: 4 },
+      { value: '丿', keyCode: 112, ratio: 4 }
+    ], [
+      { value: '丶', keyCode: 110, ratio: 4 },
+      { value: '乛', keyCode: 122, ratio: 4 },
+      { value: '通', keyCode: 333, ratio: 4 }
+    ], [
+      { value: '12&', keyCode: -2, ratio: 4 },
+      { value: '。', className: 'alternate-indicator', ratio: 4 },
       { value: '⌫', ratio: 4, keyCode: KeyEvent.DOM_VK_BACK_SPACE }
-    ],[
-        { value:'笔画', className: 'switch-key alternate-indicator',
+    ], [
+        { value: '笔画', className: 'switch-key alternate-indicator',
           keyCode: -3, ratio: 4 },
         { value: '&nbsp', keyCode: KeyEvent.DOM_VK_SPACE, ratio: 4 },
         { value: '↵', ratio: 4, keyCode: KeyEvent.DOM_VK_RETURN }
@@ -109,7 +109,7 @@ Keyboards['zh-Hans-Stroke-Symbol-En-1'] = {
   needsCandidatePanel: true,
   needsCommaKey: true,
   width: 10,
-  basicLayoutKey: '㇐㇑㇓',
+  basicLayoutKey: '一丨丿',
   keys: [
     [
       { value: '1' }, { value: '2' }, { value: '3' } , { value: '4' },
@@ -141,7 +141,7 @@ Keyboards['zh-Hans-Stroke-Symbol-En-2'] = {
   needsCandidatePanel: true,
   needsCommaKey: true,
   width: 10,
-  basicLayoutKey: '㇐㇑㇓',
+  basicLayoutKey: '一丨丿',
   keys: [
     [
       { value: '1' }, { value: '2' }, { value: '3' } , { value: '4' },

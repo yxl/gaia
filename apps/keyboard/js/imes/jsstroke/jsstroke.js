@@ -250,19 +250,19 @@ IMEngine.prototype = {
       for (var id = 0; id < len; id++) {
         switch (this._pendingSymbols[id]) {
           case 'h':
-            symbols += '㇐';
+            symbols += '一';
             break;
           case 's':
-            symbols += '㇑';
+            symbols += '丨';
             break;
           case 'p':
-            symbols += '㇓';
+            symbols += '丿';
             break;
           case 'n':
-            symbols += '㇔';
+            symbols += '丶';
             break;
           case 'z':
-            symbols += '㇜';
+            symbols += '乛';
             break;
           case '?':
             symbols += '*';
@@ -285,6 +285,7 @@ IMEngine.prototype = {
   _sendCandidates: function engine_sendCandidates(candidates) {
     var list = [];
     var len = candidates.length;
+    this._firstCandidate = '';
     for (var id = 0; id < len; id++) {
       var cand = candidates[id];
       if (id === 0) {
@@ -344,25 +345,31 @@ IMEngine.prototype = {
     if (code === KeyEvent.DOM_VK_RETURN ||
         !this._isStrokeKey(code) ||
         this._pendingSymbols.length >= this._kBufferLenLimit) {
-      var sendKey = true;
-      if (this._firstCandidate) {
-        if (this._pendingSymbols) {
-          // candidate list exists; output the first candidate
-          this._glue.endComposition(this._firstCandidate);
-          // no return here
-          if (code === KeyEvent.DOM_VK_RETURN) {
-            sendKey = false;
-          }
+      // space or return - select the first candidate and get predicts
+      if (code === KeyEvent.DOM_VK_SPACE || code === KeyEvent.DOM_VK_RETURN) {
+        if (this._firstCandidate && this._pendingSymbols) {
+          this.select(this._firstCandidate);
+        } else {
+          //this._sendCandidates([]);
+          this.empty();
+          this._glue.sendKey(realCode);
         }
-        this._sendCandidates([]);
-      }
-      //pass the key to IMEManager for default action
-      this.empty();
-      if (sendKey) {
+        this._next();
+        return;
+      } else {  // other codes or buffer exceeds limit
+        if (this._firstCandidate) {
+          if (this._pendingSymbols) {
+            // candidate list exists; output the first candidate
+            this._glue.endComposition(this._firstCandidate);
+          }
+          this._sendCandidates([]);
+        }
+        //pass the key to IMEManager for default action
+        this.empty();
         this._glue.sendKey(realCode);
+        this._next();
+        return;
       }
-      this._next();
-      return;
     }
 
     // add symbol to pendingSymbols
@@ -428,7 +435,7 @@ IMEngine.prototype = {
       // Update the candidates list by the pending stroke string.
       // Only get 100 candidates.
       this._historyText = '';
-      var candidates = Module.strokeGetResults(this._pendingSymbols, 100);
+      var candidates = Module.strokeGetResults(this._pendingSymbols, 50);
       num = candidates.length;
       if (num > numberOfCandidatesPerRow + 1) {
         self._candidatesLength = num;
@@ -509,7 +516,8 @@ IMEngine.prototype = {
           self._glue.setComposition('');
           self._glue.endComposition(text);
         }
-        self._historyText = text;
+        self._historyText += text;
+        //self._historyText = text;
         self._candidatesLength = 0;
       }
       self._keypressQueue.push(0);
