@@ -25,7 +25,7 @@ shared/js/utilities.js
 shared/js/uuid.js
 apps/keyboard/js/imes/jspinyin/libpinyin.js
 apps/keyboard/js/imes/jszhuyin/lib/**
-apps/keyboard/js/imes/jsstroke/engine_c.js
+apps/keyboard/js/imes/jsstroke/stroke/engine_c.js
 shared/js/setImmediate.js
 shared/test/unit/test-agent-server.js
 shared/elements/gaia-header/dist/script.js

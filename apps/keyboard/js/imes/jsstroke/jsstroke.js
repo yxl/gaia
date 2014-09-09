@@ -6,7 +6,7 @@ var Module = {
 
   _isReady: false,
 
-  filePackagePrefixURL: 'js/imes/jsstroke/',
+  filePackagePrefixURL: 'js/imes/jsstroke/stroke/',
 
   canvas: {},
 
@@ -350,7 +350,6 @@ IMEngine.prototype = {
         if (this._firstCandidate && this._pendingSymbols) {
           this.select(this._firstCandidate);
         } else {
-          //this._sendCandidates([]);
           this.empty();
           this._glue.sendKey(realCode);
         }
@@ -464,7 +463,7 @@ IMEngine.prototype = {
     IMEngineBase.prototype.init.call(this, glue);
     var script = document.createElement('script');
     script.type = 'text/javascript';
-    script.src = 'js/imes/jsstroke/engine_c.js';
+    script.src = 'js/imes/jsstroke/stroke/engine_c.js';
     document.body.appendChild(script);
   },
 
@@ -517,7 +516,6 @@ IMEngine.prototype = {
           self._glue.endComposition(text);
         }
         self._historyText += text;
-        //self._historyText = text;
         self._candidatesLength = 0;
       }
       self._keypressQueue.push(0);
