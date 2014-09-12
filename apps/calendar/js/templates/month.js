@@ -37,10 +37,28 @@
       return '<li id="' + this.s('id') +
                   '" data-date="' + this.s('dateString') +
                   '" class="' + this.s('state') + '">' +
-          '<span class="day">' + this.h('date') + '</span>' +
+          '<div class="day">' + this.h('date') +
+          '<br/>' +
+          //'<div>' +
+          this.s('lunarDate') + '</div>' +
+          //'</div>' +
+          //'<span class="day">' + 'hello' + '</span>' +
           '<div class="busy-indicator"></div>' +
         '</li>';
     }
+    
+    /*day: function() {
+      return '<li id="' + this.s('id') +
+                  '" data-date="' + this.s('dateString') +
+                  '" class="' + this.s('state') + '">' +
+          '<span class="day">' + this.h('date') +
+          //'<br/>' +
+          this.s('lunarDate') +
+          '</span>' +
+          //'<span class="day">' + 'hello' + '</span>' +
+          '<div class="busy-indicator"></div>' +
+        '</li>';
+    }*/
   });
 
   Calendar.ns('Templates').Month = Month;

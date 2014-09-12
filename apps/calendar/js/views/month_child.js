@@ -164,6 +164,8 @@
         date,
         this.date
       );
+      var lunarDate = Calc.lunarcalc.lunarInfo(date.getFullYear(),
+        date.getMonth(), date.getDate());
 
       // register instance in map
       this._days[id] = null;
@@ -173,7 +175,8 @@
         id: this._dayId(id),
         dateString: id,
         state: state,
-        date: date.getDate()
+        date: date.getDate(),
+        lunarDate: lunarDate
       });
     },
 
