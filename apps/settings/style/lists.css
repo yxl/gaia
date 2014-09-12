@@ -338,7 +338,8 @@ input[type=range]:-moz-focusring {
 
 ul li > label input[type="range"] {
   height: 3rem;
-  width: calc(100% - 15rem);
+  width: calc(100% - 3rem);
+  margin: 1.5rem;
 }
 
 input[type=range]::-moz-range-track {
@@ -508,6 +509,11 @@ html[dir="rtl"] ul li.sound-setting > label input[type="range"] {
 html[dir="rtl"] dl dt {
   padding-left: 0;
   padding-right: 3rem;
+}
+
+html[dir="rtl"] ul li.bluetooth-device > a{
+  padding-left: 1rem;
+  padding-right: 1rem;
 }
 
 html[dir="rtl"] ul li > label.pack-checkbox > .color-preview:before {

@@ -49,10 +49,21 @@ class GaiaApps(object):
         return self.marionette.execute_async_script("return GaiaApps.setPermission('%s', '%s', '%s')" %
                                                     (app_name, permission_name, value))
 
-    def launch(self, name, switch_to_frame=True, launch_timeout=None):
+    def set_permission_by_url(self, manifest_url, permission_name, value):
         self.marionette.switch_to_frame()
-        result = self.marionette.execute_async_script("GaiaApps.launchWithName('%s')" % name, script_timeout=launch_timeout)
-        assert result, "Failed to launch app with name '%s'" % name
+        return self.marionette.execute_async_script("return GaiaApps.setPermissionByUrl('%s', '%s', '%s')" %
+                                                    (manifest_url, permission_name, value))
+
+    def launch(self, name, manifest_url=None, entry_point=None, switch_to_frame=True, launch_timeout=None):
+        self.marionette.switch_to_frame()
+
+        if manifest_url:
+            result = self.marionette.execute_async_script("GaiaApps.launchWithManifestURL('%s', %s)"
+                                                          % (manifest_url, json.dumps(entry_point)), script_timeout=launch_timeout)
+            assert result, "Failed to launch app with manifest_url '%s'" % manifest_url
+        else:
+            result = self.marionette.execute_async_script("GaiaApps.launchWithName('%s')" % name, script_timeout=launch_timeout)
+            assert result, "Failed to launch app with name '%s'" % name
         app = GaiaApp(frame=result.get('frame'),
                       src=result.get('src'),
                       name=result.get('name'),
@@ -560,6 +571,15 @@ class GaiaDevice(object):
         Wait(self.marionette, timeout).until(expected.element_present(
             By.CSS_SELECTOR, '#homescreen[loading-state=false]'))
 
+        # Wait for logo to be hidden
+        self.marionette.set_search_timeout(0)
+        try:
+            Wait(self.marionette, timeout, ignored_exceptions=StaleElementException).until(
+                lambda m: not m.find_element(By.ID, 'os-logo').is_displayed())
+        except NoSuchElementException:
+            pass
+        self.marionette.set_search_timeout(self.marionette.timeout or 10000)
+
     @property
     def is_b2g_running(self):
         return 'b2g' in self.manager.shellCheckOutput(['toolbox', 'ps'])
@@ -794,18 +814,6 @@ class GaiaTestCase(MarionetteTestCase, B2GTestCaseMixin):
                     self.device.file_manager.remove('/'.join([path, item]))
 
     def cleanup_gaia(self, full_reset=True):
-        # restore settings from testvars
-        [self.data_layer.set_setting(name, value) for name, value in self.testvars.get('settings', {}).items()]
-
-        # restore prefs from testvars
-        for name, value in self.testvars.get('prefs', {}).items():
-            if type(value) is int:
-                self.data_layer.set_int_pref(name, value)
-            elif type(value) is bool:
-                self.data_layer.set_bool_pref(name, value)
-            else:
-                self.data_layer.set_char_pref(name, value)
-
         # unlock
         if self.data_layer.get_setting('lockscreen.enabled'):
             self.device.unlock()
@@ -859,6 +867,18 @@ class GaiaTestCase(MarionetteTestCase, B2GTestCaseMixin):
 
         # disable auto-correction of keyboard
         self.data_layer.set_setting('keyboard.autocorrect', False)
+
+        # restore settings from testvars
+        [self.data_layer.set_setting(name, value) for name, value in self.testvars.get('settings', {}).items()]
+
+        # restore prefs from testvars
+        for name, value in self.testvars.get('prefs', {}).items():
+            if type(value) is int:
+                self.data_layer.set_int_pref(name, value)
+            elif type(value) is bool:
+                self.data_layer.set_bool_pref(name, value)
+            else:
+                self.data_layer.set_char_pref(name, value)
 
     def connect_to_network(self):
         if not self.device.is_online:

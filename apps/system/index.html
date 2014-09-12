@@ -3,6 +3,9 @@
   <head>
     <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1">
     <meta charset="utf-8">
+    <!-- Icons -->
+    <link rel="stylesheet" type="text/css" href="shared/elements/gaia-icons/style.css">
+
     <!-- Init Logo -->
     <link rel="stylesheet" type="text/css" href="style/system/initlogo.css">
 
@@ -56,7 +59,11 @@
     <!-- Wrapper -->
     <link rel="stylesheet" type="text/css" href="style/wrapper/wrapper.css">
     <link rel="stylesheet" type="text/css" href="style/chrome/chrome.css">
+    <link rel="stylesheet" href="shared/elements/gaia_overflow_menu/style/external.css">
+    <!--
     <script defer src="shared/js/bookmarks_database.js"></script>
+    <script defer src="shared/elements/gaia_overflow_menu/script.js"></script>
+    -->
 
 
     <link rel="stylesheet" type="text/css" href="style/attention_indicator.css">
@@ -97,6 +104,8 @@
     <link rel="resource" type="application/json" href="shared/resources/apn.json"/>
     <link rel="resource" type="image/png" href="shared/resources/branding/initlogo.png"/>
     <link rel="resource" type="image/png" href="shared/resources/branding/initlogo_large.png"/>
+    <link rel="resource" type="audio/ogg" href="shared/resources/media/ringtones/ringer_firefox.opus"/>
+    <link rel="resource" type="audio/ogg" href="shared/resources/media/notifications/notifier_firefox.opus"/>
     -->
 
     <link rel="resource" type="image/png" href="shared/resources/branding/browser_84.png"/>
@@ -147,6 +156,7 @@
     <script defer src="js/input_transition.js"></script>
     <script defer src="js/ime_switcher.js"></script>
     <script defer src="js/input_frame_manager.js"></script>
+    <script defer src="js/input_layouts.js"></script>
     <script defer src="js/keyboard_manager.js"></script>
 
     <!-- Utility Tray -->
@@ -318,6 +328,7 @@
     <link rel="resource" type="application/l10n" href="shared/locales/download.ini">
     <link rel="resource" type="application/l10n" href="shared/locales/voicemail.ini">
     <link rel="resource" type="application/l10n" href="shared/locales/lockscreen.ini">
+    <link rel="resource" type="application/l10n" href="shared/elements/gaia_menu/locales/locales.ini">
 
     <!-- Payment -->
     <script defer src="js/payment.js"></script>
@@ -532,16 +543,15 @@
       <div id="utility-tray" data-z-index-level="utility-tray">
         <!-- Placeholder for notifications -->
         <div id="notifications-placeholder"></div>
-
         <div id="utility-tray-grippy">
         </div>
       </div>
 
       <!-- Notifications -->
       <div id="utility-tray-notifications" data-l10n-id="utilityTray" role="dialog" aria-label="Utility tray" data-z-index-level="utility-tray-notifications">
-        <div id="notification-bar">
-          <span id="notification-some" data-l10n-id="notifications">Notifications</span>
-
+        <div id="notification-bar" class="fake-notification">
+          <div data-icon="notifications"></div>
+          <div id="notification-some" class="title-container" data-l10n-id="notifications">Notifications</div>
           <button id="notification-clear" data-l10n-id="clear-all" disabled>Clear all</button>
         </div>
 
@@ -550,88 +560,72 @@
           <div id="attention-window-notifications-container"></div>
           <!-- Update Manager -->
           <div id="update-manager-container" class="fake-notification" role="link">
-            <div class="icon">
-            </div>
-            <div class="activity">
-            </div>
-            <div class="message">
-            </div>
+            <div data-icon="download-circle"></div>
+            <div class="icon activity"></div>
+            <div class="title-container"></div>
           </div>
-          <!-- Emergency callback Manager -->
+          <!-- Emergency callback manager -->
           <div id="emergency-callback-notification" class="fake-notification" hidden role="link">
-            <div class="icon">
-            </div>
-            <div class="message" data-l10n-id="emergency-callback-mode">
-            </div>
-            <div class="timer">
-            </div>
+            <div data-icon="call-emergency" class="alert"></div>
+            <div class="title-container" data-l10n-id="emergency-callback-mode"></div>
+            <div class="timer detail"></div>
           </div>
           <!-- Storage watcher notification -->
           <div id="storage-watcher-container" class="fake-notification" role="link">
-            <div class="icon">
-            </div>
-            <div class="message">
-            </div>
-            <div class="available-space">
-            </div>
+            <div data-icon="storage-circle"></div>
+            <div class="title-container"></div>
+            <div class="detail"></div>
           </div>
-          <!-- Media playback notification -->
-          <div id="media-playback-container" class="fake-notification" hidden>
-            <div class="media-playback-nowplaying">
-              <div class="icon">
-              </div>
-              <div class="albumart">
-              </div>
-              <div class="title" data-l10n-id="mediaPlaybackTitle">
-              </div>
-              <div class="artist" data-l10n-id="mediaPlaybackArtist">
-              </div>
-            </div>
-            <div class="media-playback-controls" role="toolbar" data-l10n-id="mediaPlaybackControls">
-              <button class="previous" data-l10n-id="mediaPlaybackPrevious"></button>
-              <button class="play-pause"></button>
-              <button class="next" data-l10n-id="mediaPlaybackNext"></button>
-            </div>
-          </div>
-          <!-- App Install Manager -->
+          <!-- App install manager notification -->
           <div id="install-manager-notification-container">
           </div>
-          <!-- bluetooth transfer -->
+          <!-- Bluetooth transfer -->
           <div id="bluetooth-transfer-status-list">
           </div>
-          <!-- Another entry to show IME list when the keyboard is activated -->
+          <!-- IME list -->
           <div id="keyboard-show-ime-list">
             <div class="fake-notification" role="link">
-                <div class="message">
-                </div>
-                <div class="tip">
-                </div>
+              <div data-icon="keyboard-circle"></div>
+              <div class="title-container"></div>
+              <div class="detail"></div>
             </div>
           </div>
-          <!-- media recording status -->
-          <div id="media-recoding-status-list" role="list">
+          <!-- Media recording status -->
+          <div id="media-recording-status-list" role="list">
           </div>
-
+          <!-- Notifications container -->
           <div id="desktop-notifications-container">
-            <div class='priority-notifications'></div>
-            <div class='other-notifications'></div>
+            <div class="priority-notifications"></div>
+            <div class="other-notifications"></div>
           </div>
         </div>
 
-        <!-- credit module -->
-        <div id="cost-control-widget"></div>
+        <div id="utility-tray-footer">
+          <!-- Media playback notification -->
+          <div id="media-playback-container" class="media-playback-container fake-notification" hidden>
+            <div class="media-playback-nowplaying">
+              <div class="track" data-l10n-id="mediaPlaybackTrack"></div>
+            </div>
+            <div class="media-playback-controls" role="toolbar" data-l10n-id="mediaPlaybackControls">
+              <button data-icon="skip-back" class="previous" data-l10n-id="mediaPlaybackPrevious"></button>
+              <button data-icon="play" class="play-pause"></button>
+              <button data-icon="skip-forward" class="next" data-l10n-id="mediaPlaybackNext"></button>
+            </div>
+          </div>
 
-        <!-- quick settings -->
-        <div id="quick-settings" role="toolbar">
-          <a href="#" id="quick-settings-wifi" data-enabled="false" role="button"></a>
-          <div class="separator"></div>
-          <a href="#" id="quick-settings-data" data-enabled="false" role="button"></a>
-          <div class="separator"></div>
-          <a href="#" id="quick-settings-bluetooth" data-enabled="false" role="button"></a>
-          <div class="separator"></div>
-          <a href="#" id="quick-settings-airplane-mode" data-enabled="false" role="button"></a>
-          <div class="separator"></div>
-          <a href="#" id="quick-settings-full-app" data-enabled="false" role="button" data-l10n-id="settingsButton"></a>
+          <!-- Credit module -->
+          <div id="cost-control-widget"></div>
+
+          <!-- Quick settings -->
+          <div id="quick-settings" role="toolbar">
+            <li>
+              <ul><a href="#" id="quick-settings-wifi" class="icon" data-icon="wifi-4" data-enabled="false" role="button"></a></ul>
+              <ul><a href="#" id="quick-settings-airplane-mode" class="icon" data-icon="airplane" data-enabled="false" role="button"></a></ul>
+              <ul><a href="#" id="quick-settings-bluetooth" class="icon" data-icon="bluetooth" data-enabled="false" role="button"></a></ul>
+              <ul><a href="#" id="quick-settings-data" class="icon" data-icon="data" data-enabled="false" role="button"></a></ul>
+              <ul><a href="#" id="quick-settings-full-app" class="icon" data-icon="settings" data-enabled="false" role="button" data-l10n-id="settingsButton"></a></ul>
+            </li>
+          </div>
         </div>
       </div>
 
@@ -827,6 +821,15 @@
       -->
       </div>
 
+      <div id="value-selector-groupoption-template" hidden>
+      <!--
+      <li role="subheader">
+        <label role="presentation">
+          <span>${text}</span>
+        </label>
+      </li>
+      -->
+      </div>
       <div id="value-selector-option-template" hidden>
       <!--
       <li role="option" data-option-index="${index}" aria-selected="${checked}">
@@ -1024,6 +1027,17 @@
         </section>
       </form>
 
+      <form data-type="confirm" role="dialog" id="quick-setting-data-enabled-dialog" class="generic-dialog" data-z-index-level="quick-setting-data-enabled-dialog">
+        <section>
+          <h1 data-l10n-id="data-roaming-enabled-title"></h1>
+          <p data-l10n-id="data-roaming-enabled-warning"></p>
+        </section>
+        <menu>
+          <button type="button" class="quick-setting-data-cancel-btn recommend" data-l10n-id="notNow">Not now</button>
+          <button type="button" class="quick-setting-data-ok-btn" data-l10n-id="turnOn">Turn ON</button>
+        </menu>
+      </form>
+
       <div id="lockscreen-camera" data-z-index-level="lockscreen-camera"></div>
 
       <!-- template for LockScreen window. -->
@@ -1049,17 +1063,14 @@
             </div>
             <div id="lockscreen-message" hidden></div>
             <div id="lockscreen-area"></div>
-            <div id="lockscreen-media-container" hidden>
+            <div id="lockscreen-media-container" class="media-playback-container fake-notification" hidden>
               <div class="media-playback-nowplaying">
-                <div class="icon"></div>
-                <div class="albumart"></div>
-                <div class="title" data-l10n-id="mediaPlaybackTitle"></div>
-                <div class="artist" data-l10n-id="mediaPlaybackArtist"></div>
+                <div class="track" data-l10n-id="mediaPlaybackTrack"></div>
               </div>
-              <div class="media-playback-controls big" role="toolbar" data-l10n-id="mediaPlaybackControls">
-                <button class="previous" data-l10n-id="mediaPlaybackPrevious"></button>
-                <button class="play-pause"></button>
-                <button class="next" data-l10n-id="mediaPlaybackNext"></button>
+              <div class="media-playback-controls" role="toolbar" data-l10n-id="mediaPlaybackControls">
+                <button data-icon="skip-back" class="previous" data-l10n-id="mediaPlaybackPrevious"></button>
+                <button data-icon="play" class="play-pause"></button>
+                <button data-icon="skip-forward" class="next" data-l10n-id="mediaPlaybackNext"></button>
               </div>
             </div>
             <div id="lockscreen-icon-container">
@@ -1168,7 +1179,7 @@
       <!-- cards view -->
       <div id="cards-view" data-z-index-level="cards-view">
         <ul id="cards-list"></ul>
-        <span class="no-recent-apps" data-l10n-id="no-recent-apps">No recent apps</span>
+        <span id="cards-no-recent-windows" class="no-recent-apps" data-l10n-id="no-recent-app-windows">No recent windows</span>
       </div>
 
       <!-- icc / stk -->
@@ -1249,7 +1260,10 @@
       <div id="system-overlay" data-z-index-level="system-overlay">
         <div id="battery">
           <span class="icon-battery"></span>
-          <span class="battery-notification" data-l10n-id="battery-almost-empty2">Battery almost empty</span>
+          <div class="battery-notification">
+            <span data-l10n-id="battery-almost-empty3">Battery almost empty.</span>
+            <span data-l10n-id="plug-in-your-charger">Plug in your charger.</span>
+          </div>
         </div>
 
         <div id="volume" class="vibration">

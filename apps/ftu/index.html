@@ -69,9 +69,9 @@
   <script defer src="/shared/js/contacts/import/facebook/fb_data.js"></script>
   <script defer src="/shared/js/contacts/import/facebook/fb_utils.js"></script>
   <script defer src="/shared/js/contacts/import/facebook/fb_query.js"></script>
-  <!--<script defer src="/shared/js/contacts/import/import_status_data.js"></script>-->
   <script defer src="/shared/js/fb/fb_reader_utils.js"></script>
   <script defer src="/shared/js/contacts/import/facebook/fb_contact_utils.js"></script>
+  <script defer src="/shared/js/contacts/import/import_status_data.js"></script>
   <script defer src="/shared/js/async_storage.js"></script>
   <script defer src="/shared/js/mobile_operator.js"></script>
   <script defer src="/shared/js/icc_helper.js"></script>
@@ -247,7 +247,9 @@
             </li>
           </ul>
         </article>
-        <gaia-subheader id="dataCaution" data-l10n-id="caution" skin="organic"></gaia-subheader>
+        <gaia-subheader id="dataCaution" skin="organic">
+          <span data-l10n-id="caution" />
+        </gaia-subheader>
         <section class="content">
           <p id="dataExplanation" data-l10n-id="dataConnectionInfo">Some text here</p>
         </section>
@@ -386,7 +388,9 @@
             </li>
           </ul>
         </article>
-        <gaia-subheader id="geolocationNotice" data-l10n-id="notice" skin="organic"></gaia-subheader>
+        <gaia-subheader id="geolocationNotice" skin="organic">
+          <span data-l10n-id="notice" />
+        </gaia-subheader>
         <section class="content">
           <p id="geolocationInfo" data-l10n-id="geolocationInfo2">Some text here</p>
           <p id="geolocationInfoMore" data-l10n-id="geolocationInfoMore">Some text here</p>
@@ -420,8 +424,8 @@
             </li>
           </ul>
         </article>
-        <gaia-subheader data-l10n-id="otherAccount" skin="organic">
-          Other accounts
+        <gaia-subheader skin="organic">
+          <span data-l10n-id="otherAccount">Other accounts</span>
         </gaia-subheader>
         <article data-type="list">
           <ul id="fb_container">
@@ -490,7 +494,7 @@
       <section role="region" id="about-your-privacy">
         <i class='hack-first-child'></i> <!-- see Bug 819886 -->
         <gaia-subheader skin="organic">
-          Mozilla
+          <span>Mozilla</span>
         </gaia-subheader>
         <article data-type="list">
           <ul>
@@ -510,8 +514,8 @@
             </li>
           </ul>
         </article>
-        <gaia-subheader data-l10n-id="about-other" skin="organic">
-          Other
+        <gaia-subheader skin="organic">
+          <span data-l10n-id="about-other">Other</span>
         </gaia-subheader>
         <article data-type="list">
           <ul>
@@ -639,11 +643,11 @@
 
   <section id="update-screen" class="finish-screen-base" role="region">
     <section class="content">
-      <h1 data-l10n-id="whatsNew">
-        What's new
+      <h1 data-l10n-id="startYourPhone">
+        Start your phone tour!
       </h1>
-      <p data-l10n-id="updatedSuccessfully">
-        Your phone has updated successfully! Start the tour to find out more about the new features.
+      <p data-l10n-id="joinTutorialUpdated">
+        Join us for a quick tutorial about the updates to your phone!
       </p>
     </section>
     <gaia-buttons skin="dark">
@@ -677,8 +681,11 @@
       <h1 data-l10n-id="thatsIt">
         That's it!
       </h1>
-      <h2 data-l10n-id="enjoyYourPhone">
+      <h2 id="enjoyYourPhone" data-l10n-id="enjoyYourPhone">
         You're ready to enjoy your new phone ;)
+      </h2>
+      <h2 id="enjoyYourPhoneUpdated" data-l10n-id="enjoyYourPhoneUpdated" hidden>
+        You're ready to enjoy your updated phone.
       </h2>
       </section>
       <gaia-buttons skin="dark" class="forward-only">

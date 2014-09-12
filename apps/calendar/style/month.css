@@ -38,6 +38,7 @@ section.month li {
   -moz-user-select: none;
   font-size: 1.4rem;
   line-height: 120%;
+  /*line-height: 80%;*/
   margin-right: 0.1rem;
   width: 4.4rem;
 }
@@ -115,8 +116,10 @@ section.month .other-month {
 
 section.month .day {
   display: block;
-  font-size: 1.8rem;
-  line-height: 4.4rem;
+  /*font-size: 1.8rem;*/
+  font-size: 1.2rem;
+  /*line-height: 4.4rem;*/
+  line-height: 2.4rem;
 }
 
 section.month .busy-indicator {

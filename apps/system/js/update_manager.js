@@ -67,7 +67,7 @@ var UpdateManager = {
     this.systemUpdatable = new SystemUpdatable();
 
     this.container = document.getElementById('update-manager-container');
-    this.message = this.container.querySelector('.message');
+    this.message = this.container.querySelector('.title-container');
 
     this.toaster = document.getElementById('update-manager-toaster');
     this.toasterMessage = this.toaster.querySelector('.message');
@@ -238,17 +238,25 @@ var UpdateManager = {
 
     if (this._downloading) {
       var cancel = {
-        title: _('no'),
+        title: 'no',
         callback: this.cancelPrompt.bind(this)
       };
 
       var confirm = {
-        title: _('yes'),
+        title: 'yes',
         callback: this.cancelAllDownloads.bind(this)
       };
 
-      CustomDialog.show(_('cancelAllDownloads'), _('wantToCancelAll'),
-                        cancel, confirm);
+      var screen = document.getElementById('screen');
+
+      CustomDialog.show(
+        'cancelAllDownloads',
+        'wantToCancelAll',
+        cancel,
+        confirm,
+        screen
+      )
+      .setAttribute('data-z-index-level', 'system-dialog');
     } else {
       this.launchDownload();
     }
@@ -264,10 +272,13 @@ var UpdateManager = {
       callback: this.cancelPrompt.bind(this)
     };
 
-    CustomDialog.show(
-    _('systemUpdate'),
-    _('downloadUpdatesVia2GForbidden2'),
-    ok);
+    var systemUpdate = _('systemUpdate');
+    var downloadUpdatesVia2GForbidden2 = _('downloadUpdatesVia2GForbidden2');
+    var screen = document.getElementById('screen');
+
+    CustomDialog
+      .show(systemUpdate, downloadUpdatesVia2GForbidden2, ok, null, screen)
+      .setAttribute('data-z-index-level', 'system-dialog');
   },
 
   showDownloadPrompt: function um_showDownloadPrompt() {

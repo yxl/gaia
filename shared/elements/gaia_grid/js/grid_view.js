@@ -183,6 +183,11 @@
 
       var lastTouchStart = this.lastTouchStart;
 
+      if (!lastTouchStart) {
+        // This variable is deleted once a contextmenu event is received
+        return;
+      }
+
       var touch = e.changedTouches.identifiedTouch(lastTouchStart.identifier);
       if (!touch) {
         return;
@@ -226,7 +231,7 @@
 
       // We do not allow users to launch icons in edit mode
       if (action === 'launch' && inEditMode) {
-        if (icon.detail.type !== 'bookmark' || !icon.isEditable()) {
+        if (!icon.isEditable()) {
           return;
         }
         // Editing a bookmark in edit mode

@@ -114,6 +114,13 @@ suite('Contacts', function() {
     window.ImportStatusData.clear();
 
     navigator.addIdleObserver = function() {};
+
+    // We don't want to trigger migrations in this test suite.
+    MockCookie.data = {
+      fbMigrated: true,
+      accessTokenMigrated: true
+    };
+
     Contacts.init();
     mockNavigation = window.navigationStack.firstCall.thisValue;
   });
@@ -501,28 +508,4 @@ suite('Contacts', function() {
       });
     });
   });
-
-  test('FB sync scheduling when synced in ftu', function(done) {
-    window.fb.sync = {
-      scheduleNextSync: function() {
-        done(function(){
-          window.fb.sync = null;
-          navigator.addIdleObserver = null;
-          navigator.removeIdleObserver = null;
-        });
-        return {};
-      }
-    };
-
-    navigator.addIdleObserver = function(idleObserver) {
-      idleObserver.onidle();
-    };
-
-    navigator.removeIdleObserver = function() {};
-
-    MockImportStatusData.put('facebookShouldHaveScheduledAt', Date.now()).then(
-      Contacts.init
-    );
-  });
-
 });

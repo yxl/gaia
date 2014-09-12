@@ -273,7 +273,7 @@ suite('Build Integration tests', function() {
         filePath = path.join(process.cwd(), 'apps', appName, filePath)
       }
 
-      if (path.existsSync(filePath)) {
+      if (fs.existsSync(filePath)) {
         fileInApps = fs.readFileSync(filePath);
       } else {
         filePath = filePath.replace('@' + reso + 'x', '');
@@ -784,6 +784,24 @@ suite('Build Integration tests', function() {
         done();
       });
     });
+  });
+
+  test('make test-l10n-optimize build noFetch file', function(done) {
+    helper.exec('APP=test-l10n-optimize make',
+      function(error, stdout, stderr) {
+        helper.checkError(error, stdout, stderr);
+
+        var expectedScript = '<script type="application/l10n" lang="en-US">\n'+
+                             '  {"entity1":"My Entity"}\n' +
+                             '</script>';
+        var testZip = new AdmZip(path.join(process.cwd(), 'profile',
+          'webapps', 'test-l10n-optimize.gaiamobile.org', 'application.zip'));
+        var indexHtml =
+          testZip.readAsText(testZip.getEntry('index.html'));
+        assert.ok(indexHtml.indexOf(expectedScript) !== -1);
+        done();
+      }
+    );
   });
 
   teardown(function() {

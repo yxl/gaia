@@ -6,6 +6,9 @@ require.config({
     'shared': '../shared/js'
   },
   shim: {
+    'connectivity': {
+      exports: 'Connectivity'
+    },
     'settings': {
       exports: 'Settings'
     },
@@ -87,8 +90,7 @@ require.config({
       name: 'panels/root/panel',
       exclude: [
         'main',
-        'modules/battery',
-        'modules/bluetooth'
+        'modules/battery'
       ]
     },
     {
@@ -217,7 +219,7 @@ require.config({
       ]
     },
     {
-      name: 'panels/browser_privacy/panel',
+      name: 'panels/browsing_privacy/panel',
       exclude: ['main']
     },
     {

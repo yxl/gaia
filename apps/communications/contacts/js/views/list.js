@@ -84,9 +84,13 @@ contacts.List = (function() {
       'ABCDEFGHIJKLMNOPQRSTUVWXYZ' +          // Roman
       'ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ' +            // Greek
       'АБВГДЂЕЁЖЗИЙЈКЛЉМНЊОПРСТЋУФХЦЧЏШЩЭЮЯ'; // Cyrillic (Russian + Serbian)
-    var order = { 'favorites': 0 };
+    var order = { 
+      'ice': 0,
+      'favorites': 1
+    };
+    var presetsLength = Object.keys(order).length;
     for (var i = 0; i < letters.length; i++) {
-      order[letters[i]] = i + 1;
+      order[letters[i]] = i + presetsLength;
     }
     order.und = i + 1;
     return order;
@@ -303,6 +307,8 @@ contacts.List = (function() {
   var scrollToCb = function scrollCb(domTarget, group) {
     if (domTarget.offsetTop > 0) {
       scrollable.scrollTop = domTarget.offsetTop;
+    } else if (group === 'search-container') {
+      scrollable.scrollTop = 0;
     }
   };
 
@@ -1136,9 +1142,9 @@ contacts.List = (function() {
   };
 
   var showNoContactsAlert = function showNoContactsAlert() {
-    var msg = _('noContactsActivity');
+    var msg = 'noContactsActivity';
     var noObject = {
-      title: _('ok'),
+      title: 'ok',
       isDanger: false,
       callback: function onNoClicked() {
         ConfirmDialog.hide();
@@ -1547,6 +1553,7 @@ contacts.List = (function() {
       cancelLoadCB = resetDom.bind(null, cb);
       return;
     }
+    iceGroup = null;
     utils.dom.removeChildNodes(groupsList);
     headers = {};
     loadedContacts = {};
